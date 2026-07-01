@@ -1,0 +1,2 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+export default function Page() { return <div><h1 className="text-3xl font-bold tracking-tight">Analytics</h1><p className="mt-1 text-muted-foreground">Explore trends, budgets, and tax-ready reports.</p><Card className="mt-6"><CardHeader><CardTitle>Analytics workspace</CardTitle></CardHeader><CardContent><p className="text-sm text-muted-foreground">Add date comparisons, category drill-downs, forecasting, and exports here.</p></CardContent></Card></div>; }
