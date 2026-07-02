@@ -1,0 +1,1 @@
+"""Receipt processor tests."""
