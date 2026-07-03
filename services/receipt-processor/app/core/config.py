@@ -15,8 +15,8 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     supabase_url: str = ""
+    supabase_publishable_key: str = ""
     supabase_service_role_key: str = ""
-    supabase_jwt_secret: str = ""
     supabase_receipts_bucket: str = "receipts"
     supabase_receipts_table: str = "receipts"
     supabase_receipt_items_table: str = "receipt_items"

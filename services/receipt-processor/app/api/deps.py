@@ -1,7 +1,7 @@
 from fastapi import Depends, Header, HTTPException, status
 
 from app.core.config import Settings, get_settings
-from app.core.security import SupabaseJWTVerifier, TokenVerifier
+from app.core.security import SupabaseAuthTokenVerifier, TokenVerifier
 from app.dspy_pipeline.pipeline import ReceiptExtractionPipeline
 from app.models.auth import AuthenticatedUser
 from app.providers.embeddings import MockEmbeddingProvider
@@ -20,10 +20,10 @@ _memory_storage = MemoryReceiptStorage()
 
 
 def get_token_verifier(settings: Settings = Depends(get_settings)) -> TokenVerifier:
-    return SupabaseJWTVerifier(settings)
+    return SupabaseAuthTokenVerifier(settings)
 
 
-def get_current_user(
+async def get_current_user(
     authorization: str | None = Header(default=None),
     verifier: TokenVerifier = Depends(get_token_verifier),
 ) -> AuthenticatedUser:
@@ -32,7 +32,7 @@ def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing authentication",
         )
-    return verifier.verify(authorization.removeprefix("Bearer ").strip())
+    return await verifier.verify(authorization.removeprefix("Bearer ").strip())
 
 
 def get_repository(settings: Settings = Depends(get_settings)) -> ReceiptRepository:

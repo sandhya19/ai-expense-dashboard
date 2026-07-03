@@ -15,6 +15,11 @@ uvicorn app.main:app --reload --port 8000
 
 Use `OCR_PROVIDER=mock`, `REPOSITORY_BACKEND=memory`, and `STORAGE_BACKEND=memory` for local development without external services.
 
+For Supabase-backed uploads, configure `.env` with `SUPABASE_URL`,
+`SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`. The service
+verifies forwarded user access tokens through Supabase Auth `/auth/v1/user`;
+do not store user JWTs in `.env`.
+
 ## API
 
 Health:
@@ -50,5 +55,6 @@ mypy app tests
 
 - The Supabase service-role key belongs only in this service environment.
 - Do not send service-role keys to the browser or Next.js client components.
+- `SUPABASE_PUBLISHABLE_KEY` is used only to verify the user's forwarded
+  access token with Supabase Auth.
 - Routes are thin; provider integrations are behind interfaces for reuse by other applications.
-

@@ -15,4 +15,4 @@ class MockEmbeddingProvider:
 
     async def embed_text(self, text: str) -> EmbeddingResult:
         length = float(min(len(text), 1000))
-        return EmbeddingResult(provider_name="mock", vector=[length, 0.0, 1.0])
+        return EmbeddingResult(provider_name="mock", vector=[length, *([0.0] * 1535)])

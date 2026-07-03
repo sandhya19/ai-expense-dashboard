@@ -41,6 +41,7 @@ class ReceiptService:
         await self.storage.upload(storage_path, validated.content, validated.mime_type)
         receipt = await self.repository.create(
             ReceiptCreate(
+                id=receipt_id,
                 user_id=user.user_id,
                 original_filename=filename,
                 storage_path=storage_path,

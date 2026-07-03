@@ -14,6 +14,12 @@ def test_receipt_creation(client: TestClient) -> None:
     receipt = response.json()["receipt"]
     assert receipt["user_id"] == "user-1"
     assert receipt["processing_status"] == "completed"
+    assert receipt["status"] == "completed"
+    assert receipt["merchant"] == "Mock Merchant"
+    assert receipt["total"] == "12.00"
+    assert receipt["currency"] == "GBP"
+    assert receipt["category"] == "Other"
+    assert receipt["confidence"] > 0
     assert receipt["ocr_provider"] == "mock"
 
 

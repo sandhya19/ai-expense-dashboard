@@ -1,8 +1,9 @@
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Protocol
-from uuid import uuid4
 
 import httpx
+from fastapi.encoders import jsonable_encoder
 
 from app.core.config import Settings
 from app.models.receipts import ProcessingStatus, ReceiptCreate, ReceiptRecord
@@ -30,8 +31,16 @@ class MemoryReceiptRepository:
     async def create(self, payload: ReceiptCreate) -> ReceiptRecord:
         now = datetime.now(UTC)
         record = ReceiptRecord(
-            id=str(uuid4()),
+            id=payload.id,
             user_id=payload.user_id,
+            merchant="Processing receipt",
+            receipt_date=now.date(),
+            category="Uncategorised",
+            total=Decimal("0"),
+            currency="GBP",
+            confidence=0,
+            status="processing",
+            is_business=False,
             original_filename=payload.original_filename,
             storage_path=payload.storage_path,
             mime_type=payload.mime_type,
@@ -74,7 +83,16 @@ class SupabaseReceiptRepository:
 
     async def create(self, payload: ReceiptCreate) -> ReceiptRecord:
         body = {
+            "id": payload.id,
             "user_id": payload.user_id,
+            "merchant": "Processing receipt",
+            "receipt_date": datetime.now(UTC).date(),
+            "category": "Uncategorised",
+            "total": 0,
+            "currency": "GBP",
+            "confidence": 0,
+            "status": "processing",
+            "is_business": False,
             "original_filename": payload.original_filename,
             "storage_path": payload.storage_path,
             "mime_type": payload.mime_type,
@@ -82,7 +100,11 @@ class SupabaseReceiptRepository:
             "processing_status": ProcessingStatus.uploaded,
         }
         async with httpx.AsyncClient(timeout=30) as client:
-            response = await client.post(self._base_url, headers=self._headers, json=body)
+            response = await client.post(
+                self._base_url,
+                headers=self._headers,
+                json=jsonable_encoder(body),
+            )
             response.raise_for_status()
             return ReceiptRecord.model_validate(response.json()[0])
 
@@ -101,7 +123,7 @@ class SupabaseReceiptRepository:
             response = await client.patch(
                 f"{self._base_url}?id=eq.{receipt_id}",
                 headers=self._headers,
-                json=values,
+                json=jsonable_encoder(values),
             )
             response.raise_for_status()
             return ReceiptRecord.model_validate(response.json()[0])

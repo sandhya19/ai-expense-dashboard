@@ -4,8 +4,18 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.api.deps import get_current_user
+from app.core.config import get_settings
 from app.main import create_app
 from app.models.auth import AuthenticatedUser
+
+
+@pytest.fixture(autouse=True)
+def local_backends(monkeypatch: pytest.MonkeyPatch) -> Generator[None, None, None]:
+    monkeypatch.setenv("REPOSITORY_BACKEND", "memory")
+    monkeypatch.setenv("STORAGE_BACKEND", "memory")
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
 
 
 @pytest.fixture
