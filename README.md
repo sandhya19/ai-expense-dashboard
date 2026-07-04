@@ -24,6 +24,11 @@ npm run dev
 
 Open `http://localhost:3000`.
 
+Receipt uploads are proxied through the Next.js API to the FastAPI receipt
+processor. Set `RECEIPT_SERVICE_URL` in `.env.local`, for example
+`http://127.0.0.1:8001`, and run `services/receipt-processor` locally before
+testing uploads.
+
 ## Supabase setup
 
 1. Create a Supabase project.
