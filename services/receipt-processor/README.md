@@ -15,6 +15,15 @@ uvicorn app.main:app --reload --port 8000
 
 Use `OCR_PROVIDER=mock`, `REPOSITORY_BACKEND=memory`, and `STORAGE_BACKEND=memory` for local development without external services.
 
+For production OCR, use `OCR_PROVIDER=google_vision` and configure Google
+Application Default Credentials or `GOOGLE_APPLICATION_CREDENTIALS` for the
+service account that can call Cloud Vision.
+
+To use Alibaba Model Studio Qwen vision OCR for JPG/PNG receipts, set
+`OCR_PROVIDER=qwen_vl`, `QWEN_API_KEY`, and optionally `QWEN_MODEL`
+or `QWEN_BASE_URL`. The default model is `qwen-vl-max` through the
+OpenAI-compatible DashScope endpoint.
+
 For Supabase-backed uploads, configure `.env` with `SUPABASE_URL`,
 `SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`. The service
 verifies forwarded user access tokens through Supabase Auth `/auth/v1/user`;

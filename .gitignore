@@ -11,5 +11,6 @@ __pycache__
 *.egg-info
 coverage
 *.log
+*.swp
 tsconfig.tsbuildinfo
 .DS_Store

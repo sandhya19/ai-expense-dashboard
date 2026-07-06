@@ -11,6 +11,7 @@ from app.models.auth import AuthenticatedUser
 
 @pytest.fixture(autouse=True)
 def local_backends(monkeypatch: pytest.MonkeyPatch) -> Generator[None, None, None]:
+    monkeypatch.setenv("OCR_PROVIDER", "mock")
     monkeypatch.setenv("REPOSITORY_BACKEND", "memory")
     monkeypatch.setenv("STORAGE_BACKEND", "memory")
     get_settings.cache_clear()
