@@ -62,6 +62,17 @@ class ReceiptService:
             )
         return receipt
 
+    async def reprocess_for_user(self, receipt_id: str, user: AuthenticatedUser) -> ReceiptRecord:
+        receipt = await self.get_for_user(receipt_id, user)
+        try:
+            content = await self.storage.download(receipt.storage_path)
+        except Exception as exc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Receipt file could not be loaded",
+            ) from exc
+        return await self.processor.process(receipt, content)
+
     async def _validate_upload(self, file: UploadFile) -> FileValidationResult:
         if not file.filename:
             raise HTTPException(

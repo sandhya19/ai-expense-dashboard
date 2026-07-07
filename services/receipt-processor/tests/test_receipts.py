@@ -58,6 +58,22 @@ def test_get_receipt_returns_owner_receipt(client: TestClient) -> None:
     assert response.json()["receipt"]["id"] == receipt_id
 
 
+def test_reprocess_receipt_returns_updated_owner_receipt(client: TestClient) -> None:
+    created = client.post(
+        "/v1/receipts",
+        files={"file": ("receipt.pdf", b"%PDF-1.4", "application/pdf")},
+    )
+    receipt_id = created.json()["receipt"]["id"]
+
+    response = client.post(f"/v1/receipts/{receipt_id}/reprocess")
+
+    assert response.status_code == 200
+    receipt = response.json()["receipt"]
+    assert receipt["id"] == receipt_id
+    assert receipt["processing_status"] == "completed"
+    assert receipt["ocr_provider"] == "mock"
+
+
 def test_receipt_ownership_check() -> None:
     app = create_app()
 
@@ -78,4 +94,27 @@ def test_receipt_ownership_check() -> None:
     app.dependency_overrides[get_current_user] = user_two
     with TestClient(app) as other_client:
         response = other_client.get(f"/v1/receipts/{receipt_id}")
+    assert response.status_code == 403
+
+
+def test_reprocess_receipt_ownership_check() -> None:
+    app = create_app()
+
+    def user_one() -> AuthenticatedUser:
+        return AuthenticatedUser(user_id="owner")
+
+    app.dependency_overrides[get_current_user] = user_one
+    with TestClient(app) as owner_client:
+        created = owner_client.post(
+            "/v1/receipts",
+            files={"file": ("receipt.pdf", b"%PDF-1.4", "application/pdf")},
+        )
+        receipt_id = created.json()["receipt"]["id"]
+
+    def user_two() -> AuthenticatedUser:
+        return AuthenticatedUser(user_id="not-owner")
+
+    app.dependency_overrides[get_current_user] = user_two
+    with TestClient(app) as other_client:
+        response = other_client.post(f"/v1/receipts/{receipt_id}/reprocess")
     assert response.status_code == 403

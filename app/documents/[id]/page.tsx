@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   Download,
   FileText,
+  RotateCcw,
   TriangleAlert,
 } from "lucide-react";
 import Link from "next/link";
@@ -19,7 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { getReceiptDetail } from "@/lib/receipts";
 import { cn, formatCurrency } from "@/lib/utils";
-import { updateReceiptReview } from "./actions";
+import { reprocessReceipt, updateReceiptReview } from "./actions";
 
 type ReceiptDetailPageProps = {
   params: Promise<{
@@ -27,6 +28,7 @@ type ReceiptDetailPageProps = {
   }>;
   searchParams: Promise<{
     saved?: string;
+    reprocessed?: string;
     error?: string;
   }>;
 };
@@ -116,6 +118,13 @@ export default async function ReceiptDetailPage({
         <p className="flex items-center gap-2 rounded-md bg-emerald-500/10 p-3 text-sm text-emerald-700 dark:text-emerald-400">
           <CheckCircle2 className="size-4" />
           Receipt review saved.
+        </p>
+      )}
+
+      {query.reprocessed && (
+        <p className="flex items-center gap-2 rounded-md bg-emerald-500/10 p-3 text-sm text-emerald-700 dark:text-emerald-400">
+          <CheckCircle2 className="size-4" />
+          Receipt reprocessed.
         </p>
       )}
 
@@ -225,8 +234,23 @@ export default async function ReceiptDetailPage({
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle>Receipt metadata</CardTitle>
+            <form action={reprocessReceipt}>
+              <input
+                type="hidden"
+                name="id"
+                value={receipt.id}
+              />
+              <Button
+                type="submit"
+                variant="outline"
+                size="sm"
+              >
+                <RotateCcw className="size-4" />
+                Reprocess
+              </Button>
+            </form>
           </CardHeader>
 
           <CardContent>

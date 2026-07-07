@@ -1,6 +1,4 @@
-import re
-from decimal import Decimal
-
+from app.dspy_pipeline.money import find_labeled_amount
 from app.models.dspy import MoneyOutput, OCRTextInput
 
 
@@ -8,8 +6,11 @@ class SubtotalExtractionModule:
     """Extract subtotal amount from OCR text."""
 
     def run(self, input_data: OCRTextInput) -> MoneyOutput:
-        match = re.search(r"subtotal\s+([0-9]+(?:\.[0-9]{2})?)", input_data.raw_text, re.I)
+        amount = find_labeled_amount(
+            input_data.raw_text,
+            ["subtotal", "sub total", "net total", "goods"],
+        )
         return MoneyOutput(
-            amount=Decimal(match.group(1)) if match else None,
-            confidence=0.6 if match else 0,
+            amount=amount,
+            confidence=0.75 if amount is not None else 0,
         )

@@ -32,3 +32,13 @@ async def get_receipt(
 ) -> ReceiptResponse:
     receipt = await service.get_for_user(receipt_id, user)
     return ReceiptResponse(receipt=receipt)
+
+
+@router.post("/v1/receipts/{receipt_id}/reprocess", response_model=ReceiptResponse)
+async def reprocess_receipt(
+    receipt_id: str,
+    user: AuthenticatedUser = Depends(get_current_user),
+    service: ReceiptService = Depends(get_receipt_service),
+) -> ReceiptResponse:
+    receipt = await service.reprocess_for_user(receipt_id, user)
+    return ReceiptResponse(receipt=receipt)
