@@ -2,7 +2,7 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Camera, CheckCircle2, Upload, X } from "lucide-react";
+import { Camera, CheckCircle2, ScanLine, Sparkles, Upload, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -29,6 +29,7 @@ export function UploadDialog({
   const [open, setOpen] = useState(false);
   const [serverError, setServerError] = useState("");
   const [serverSuccess, setServerSuccess] = useState("");
+  const [notice, setNotice] = useState("");
   const router = useRouter();
 
   const {
@@ -46,6 +47,7 @@ export function UploadDialog({
     if (!nextOpen) {
       setServerError("");
       setServerSuccess("");
+      setNotice("");
       reset();
     }
   }
@@ -53,6 +55,7 @@ export function UploadDialog({
   async function onSubmit(values: Values) {
     setServerError("");
     setServerSuccess("");
+    setNotice("");
 
     const formData = new FormData();
     formData.append("file", values.file[0]);
@@ -73,7 +76,16 @@ export function UploadDialog({
       return;
     }
 
-    setServerSuccess("Receipt uploaded and processing completed.");
+    const receipt = body.receipt as {
+      merchant?: string;
+      total?: string | number;
+      currency?: string;
+      category?: string;
+      confidence?: number;
+      ai_summary?: string | null;
+    } | undefined;
+    setServerSuccess(receipt?.merchant ? `${receipt.merchant} scanned successfully.` : "Receipt scanned successfully.");
+    setNotice(receipt?.ai_summary ?? (receipt?.confidence ? `AI extracted ${receipt.category ?? "your purchase"} with ${receipt.confidence}% confidence.` : "Your receipt is now part of your spending story."));
     reset();
     router.refresh();
   }
@@ -139,9 +151,9 @@ export function UploadDialog({
             )}
 
             {isSubmitting && (
-              <p className="rounded-md bg-muted p-3 text-sm text-muted-foreground">
-                Uploading receipt and starting processing...
-              </p>
+              <div className="rounded-xl border bg-muted/50 p-4">
+                <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-full bg-primary/10 text-primary animate-pulse"><ScanLine className="size-5" /></span><div><p className="text-sm font-medium">ReceiptBrain is reading this moment</p><p className="mt-0.5 text-xs text-muted-foreground">Extracting totals, merchant details, and the patterns that matter.</p></div></div>
+              </div>
             )}
 
             {serverSuccess && (
@@ -149,6 +161,13 @@ export function UploadDialog({
                 <CheckCircle2 className="size-4" />
                 {serverSuccess}
               </p>
+            )}
+
+            {notice && (
+              <div className="rounded-xl bg-primary/5 p-4 text-sm">
+                <p className="flex items-center gap-2 font-medium text-primary"><Sparkles className="size-4" /> What I noticed</p>
+                <p className="mt-2 leading-6 text-muted-foreground">{notice}</p>
+              </div>
             )}
 
             {serverError && (

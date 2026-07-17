@@ -1,2 +1,19 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-export default function Page() { return <div><h1 className="text-3xl font-bold tracking-tight">AI Chat</h1><p className="mt-1 text-muted-foreground">Ask questions about receipts and spending.</p><Card className="mt-6"><CardHeader><CardTitle>AI workspace</CardTitle></CardHeader><CardContent><p className="text-sm text-muted-foreground">Add retrieval over receipt records, safe SQL tools, and cited answers here.</p></CardContent></Card></div>; }
+import { ReceiptChat } from "@/components/dashboard/receipt-chat";
+import { getReceiptList } from "@/lib/receipts";
+
+export default async function AiChatPage() {
+  const receipts = await getReceiptList();
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">AI chat</h1>
+        <p className="mt-1 text-muted-foreground">
+          Ask ReceiptBrain questions about your receipt history and spending patterns.
+        </p>
+      </div>
+
+      <ReceiptChat receipts={receipts} />
+    </div>
+  );
+}

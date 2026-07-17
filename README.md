@@ -1,20 +1,75 @@
-# ExpenseAI Dashboard
+# ReceiptBrain
 
-A production-oriented AI receipt dashboard built with Next.js 15, TypeScript, Tailwind CSS, shadcn-style Radix components, Supabase, Recharts, React Hook Form, and Zod.
+ReceiptBrain is a responsive AI receipt memory app that turns everyday receipts
+into a simple spending dashboard and basic financial insights.
 
-## Included
+## Problem
 
-- Responsive dashboard with collapsible desktop sidebar
-- Dark and light themes
-- Server Component data loading
-- Supabase Postgres, Storage, authentication-ready access, and RLS policies
-- Receipt upload and mobile camera capture
-- KPI cards, line chart, pie chart, bar chart, and recent receipts table
-- Skeleton loading and route error state
-- Mock-data fallback when Supabase environment variables are absent
-- Routes for Documents, AI Chat, Analytics, and Settings
+People collect receipts every month but rarely use them after purchase. Most
+receipt apps stop at OCR and expense tracking, leaving users without clear
+insight into their spending habits.
 
-## Run locally
+## Features
+
+- [x] Upload a receipt by taking a photo or uploading an image.
+- [x] Extract merchant, date, currency, total amount, and taxes when available.
+- [x] Persist and display extracted line items when available.
+- [x] Automatically assign each receipt to one spending category, such as
+  groceries, dining, shopping, travel, or bills.
+- [x] Store receipts in a searchable history with date, merchant, category, and
+  amount fields.
+- [x] Let users review and correct extracted data.
+- [x] Show a simple dashboard with current-month spending, category breakdown,
+  recent receipts, and a basic trend chart.
+- [x] Generate short, plain-language insights from receipt history, including
+  month-over-month changes and top spending categories.
+- [x] Surface intelligent insight cards for duplicate purchases, subscription
+  detection, monthly comparison, and overspending alerts.
+- [x] Ask Qwen-powered natural-language questions over receipt history, line
+  items, discounts, and spending patterns, with deterministic fallback logic
+  when Qwen is not configured.
+
+## Future Enhancements
+
+- [ ] Email receipt forwarding.
+- [ ] Subscription detection and recurring expense alerts.
+- [ ] Price history for repeated purchases.
+- [ ] Budget setup and budget alerts.
+- [ ] Monthly PDF reports.
+- [ ] Spending forecasts.
+- [ ] More advanced coaching and savings recommendations.
+- [ ] Native mobile apps.
+- [ ] Shared household and family accounts.
+
+## AI Models
+
+ReceiptBrain uses Qwen Cloud in two places:
+
+- Qwen VL extracts raw receipt text from uploaded receipt images through the
+  OpenAI-compatible DashScope endpoint.
+- Qwen text reasoning answers questions over recent receipts, line items,
+  discounts, categories, and merchant trends through the server-side
+  `/api/ai-chat` route.
+
+If Qwen reasoning is not configured, the app falls back to deterministic local
+receipt logic so local development and demos continue to work.
+
+## Monetization
+
+Launch with a free plan that supports up to 30 receipts per month and includes
+the MVP features.
+
+Future paid plans can add:
+
+- Pro: unlimited receipts and future premium features.
+- Family: shared household access and combined reporting.
+
+## Vision
+
+ReceiptBrain is a receipt memory app that helps people understand their spending
+using the receipts they already collect.
+
+## Run Locally
 
 ```bash
 npm install
@@ -29,23 +84,37 @@ processor. Set `RECEIPT_SERVICE_URL` in `.env.local`, for example
 `http://127.0.0.1:8001`, and run `services/receipt-processor` locally before
 testing uploads.
 
-## Supabase setup
+For Qwen-powered chat, set server-only Qwen variables in `.env.local`:
+
+```bash
+QWEN_API_KEY=...
+QWEN_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+QWEN_REASONING_MODEL=qwen-plus
+```
+
+## Supabase Setup
 
 1. Create a Supabase project.
 2. Run `supabase/schema.sql` in the SQL editor.
 3. Copy `.env.example` to `.env.local`.
 4. Add the project URL and publishable key.
-5. Add your preferred Supabase sign-in screens and session-refresh middleware before live deployment.
+5. Configure the receipt processor service with Supabase and Qwen Cloud
+   credentials.
 
-Without environment variables, the dashboard uses demo data. The upload route also returns a demo response.
+Without Supabase environment variables, the dashboard uses demo data.
 
-## Production checks
+## Production Checks
 
 ```bash
 npm run typecheck
+npm test
 npm run build
 ```
 
-## AI processing extension
+For Qwen Cloud / Alibaba Cloud submission preparation, use the checklist in
+[`docs/qwen-cloud-hackathon.md`](docs/qwen-cloud-hackathon.md).
 
-Create a worker triggered by new `processing` receipts. The worker should fetch the private Storage object, run OCR or a vision model, validate structured output, and update the row to `review`, `completed`, or `failed`.
+## Architecture
+
+See `docs/architecture.md` for the Qwen OCR flow, Qwen receipt reasoning flow,
+service boundaries, review loop, and scalability notes.

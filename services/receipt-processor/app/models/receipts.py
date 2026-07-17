@@ -26,6 +26,17 @@ class ReceiptCreate(BaseModel):
     file_size: int
 
 
+class ReceiptItemCreate(BaseModel):
+    """Line item extracted from a receipt."""
+
+    receipt_id: str
+    user_id: str
+    description: str
+    quantity: Decimal | None = None
+    unit_price: Decimal | None = None
+    total: Decimal | None = None
+
+
 class ReceiptRecord(BaseModel):
     """Stored receipt record."""
 

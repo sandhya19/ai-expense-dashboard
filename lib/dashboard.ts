@@ -1,6 +1,7 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { mockDashboardData } from "@/lib/mock-data";
+import { buildSpendingDna, buildSpendingStory } from "@/lib/spending-intelligence";
 import type { DashboardData, Receipt } from "@/lib/types";
 
 const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
@@ -41,6 +42,8 @@ export async function getDashboardData(): Promise<DashboardData> {
     monthly: Array.from(monthlyMap, ([month, amount]) => ({ month, amount })),
     categories: Array.from(categoryMap, ([name, amount]) => ({ name, value: Math.round((amount / categoryTotal) * 100) })),
     merchants: Array.from(merchantMap, ([merchant, amount]) => ({ merchant, amount })).sort((a, b) => b.amount - a.amount).slice(0, 5),
-    recent: receipts.slice(0, 8)
+    recent: receipts.slice(0, 8),
+    story: buildSpendingStory(receipts),
+    dna: buildSpendingDna(receipts),
   };
 }

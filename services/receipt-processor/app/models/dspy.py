@@ -19,8 +19,15 @@ class TransactionDateOutput(BaseModel):
 
 
 class ItemsOutput(BaseModel):
-    items: list[str]
+    items: list["LineItemOutput"]
     confidence: float = Field(ge=0, le=1)
+
+
+class LineItemOutput(BaseModel):
+    description: str
+    quantity: Decimal | None = None
+    unit_price: Decimal | None = None
+    total: Decimal | None = None
 
 
 class MoneyOutput(BaseModel):

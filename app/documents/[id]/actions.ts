@@ -19,12 +19,39 @@ const reviewSchema = z.object({
   status: z.enum(["processing", "review", "completed", "failed"]),
   isBusiness: z
     .string()
-    .optional()
+    .nullish()
     .transform((value) => value === "on"),
 });
 
 const reprocessSchema = z.object({
   id: z.string().uuid(),
+});
+
+const optionalNumberSchema = z.preprocess(
+  (value) => (value === "" || value === null ? null : value),
+  z.coerce.number().nullable()
+);
+
+const optionalQuantitySchema = z.preprocess(
+  (value) => (value === "" || value === null ? null : value),
+  z.coerce.number().min(0).nullable()
+);
+
+const lineItemSchema = z.object({
+  id: z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    z.string().uuid().optional()
+  ),
+  description: z.string().trim().min(1, "Item description is required."),
+  quantity: optionalQuantitySchema,
+  unitPrice: optionalNumberSchema,
+  total: optionalNumberSchema,
+});
+
+const lineItemsSchema = z.object({
+  receiptId: z.string().uuid(),
+  items: z.array(lineItemSchema),
+  deletedItemIds: z.array(z.string().uuid()),
 });
 
 function getFastApiError(body: unknown, fallback: string) {
@@ -143,23 +170,49 @@ export async function updateReceiptReview(formData: FormData) {
   const { id, merchant, receiptDate, category, total, currency, status, isBusiness } =
     parsed.data;
 
-  const { error } = await supabase
+  const { data: lineItems, error: lineItemsError } = await supabase
+    .from("receipt_items")
+    .select("total")
+    .eq("receipt_id", id);
+
+  if (lineItemsError) {
+    redirect(
+      `/documents/${id}?error=${encodeURIComponent(lineItemsError.message)}`
+    );
+  }
+
+  const lineItemTotal = (lineItems ?? []).reduce(
+    (sum, item) => sum + Number(item.total ?? 0),
+    0
+  );
+  const isValidated =
+    (lineItems?.length ?? 0) > 0 &&
+    (lineItems ?? []).every((item) => item.total !== null) &&
+    Math.abs(lineItemTotal - total) <= 0.01;
+  const validatedStatus = status === "failed" ? "failed" : isValidated ? "completed" : "review";
+
+  const { data: updatedReceipt, error } = await supabase
     .from("receipts")
     .update({
       merchant,
+      merchant_name: merchant,
       receipt_date: receiptDate,
       category,
       total,
       currency,
-      status,
+      status: validatedStatus,
       is_business: isBusiness,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", id);
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
 
-  if (error) {
+  if (error || !updatedReceipt) {
     redirect(
-      `/documents/${id}?error=${encodeURIComponent(error.message)}`
+      `/documents/${id}?error=${encodeURIComponent(
+        error?.message ?? "Receipt update was not authorised. Sign in again and retry."
+      )}`
     );
   }
 
@@ -168,4 +221,123 @@ export async function updateReceiptReview(formData: FormData) {
   revalidatePath(`/documents/${id}`);
 
   redirect(`/documents/${id}?saved=1`);
+}
+
+export async function updateReceiptLineItems(formData: FormData) {
+  const ids = formData.getAll("itemId");
+  const descriptions = formData.getAll("description");
+  const quantities = formData.getAll("quantity");
+  const unitPrices = formData.getAll("unitPrice");
+  const totals = formData.getAll("total");
+  const deletedItemIds = formData.getAll("deletedItemId");
+
+  const parsed = lineItemsSchema.safeParse({
+    receiptId: formData.get("receiptId"),
+    items: ids.map((id, index) => ({
+      id,
+      description: descriptions[index],
+      quantity: quantities[index],
+      unitPrice: unitPrices[index],
+      total: totals[index],
+    })),
+    deletedItemIds,
+  });
+
+  const receiptId = String(formData.get("receiptId") ?? "");
+
+  if (!parsed.success) {
+    redirect(
+      `/documents/${receiptId}?error=${encodeURIComponent(
+        parsed.error.issues[0]?.message ?? "Invalid line item update."
+      )}`
+    );
+  }
+
+  const supabase = await createClient();
+
+  const { data: receipt, error: receiptError } = await supabase
+    .from("receipts")
+    .select("total, user_id")
+    .eq("id", parsed.data.receiptId)
+    .single();
+
+  if (receiptError || !receipt) {
+    redirect(
+      `/documents/${parsed.data.receiptId}?error=${encodeURIComponent(
+        receiptError?.message ?? "Receipt could not be found."
+      )}`
+    );
+  }
+
+  const updates = parsed.data.items.filter((item) => item.id).map((item) =>
+    supabase
+      .from("receipt_items")
+      .update({
+        description: item.description,
+        quantity: item.quantity,
+        unit_price: item.unitPrice,
+        total: item.total,
+      })
+      .eq("id", item.id!)
+      .eq("receipt_id", parsed.data.receiptId)
+  );
+
+  const deletions = parsed.data.deletedItemIds.map((itemId) =>
+    supabase
+      .from("receipt_items")
+      .delete()
+      .eq("id", itemId)
+      .eq("receipt_id", parsed.data.receiptId)
+  );
+
+  const newItems = parsed.data.items.filter((item) => !item.id);
+  const insertion = newItems.length
+    ? supabase.from("receipt_items").insert(
+        newItems.map((item) => ({
+          receipt_id: parsed.data.receiptId,
+          user_id: receipt.user_id,
+          description: item.description,
+          quantity: item.quantity,
+          unit_price: item.unitPrice,
+          total: item.total,
+        }))
+      )
+    : null;
+
+  const results = await Promise.all([...updates, ...deletions]);
+  const error = results.find((result) => result.error)?.error ?? (await insertion)?.error;
+
+  if (error) {
+    redirect(
+      `/documents/${parsed.data.receiptId}?error=${encodeURIComponent(
+        error.message
+      )}`
+    );
+  }
+
+  const receiptTotal = Number(receipt.total ?? 0);
+  const itemTotal = parsed.data.items.reduce(
+    (sum, item) => sum + Number(item.total ?? 0),
+    0
+  );
+  const status =
+    parsed.data.items.length > 0 &&
+    parsed.data.items.every((item) => item.total !== null) &&
+    Math.abs(itemTotal - receiptTotal) <= 0.01
+      ? "completed"
+      : "review";
+
+  await supabase
+    .from("receipts")
+    .update({
+      status,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", parsed.data.receiptId);
+
+  revalidatePath("/");
+  revalidatePath("/documents");
+  revalidatePath(`/documents/${parsed.data.receiptId}`);
+
+  redirect(`/documents/${parsed.data.receiptId}?itemsSaved=1`);
 }

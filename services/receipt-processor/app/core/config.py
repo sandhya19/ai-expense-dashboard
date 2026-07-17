@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     qwen_api_key: str = ""
     qwen_base_url: str = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
     qwen_model: str = "qwen-vl-max"
+    qwen_line_item_refinement: bool = True
+    qwen_line_item_model: str = "qwen-plus"
 
     embedding_provider: Literal["mock"] = "mock"
     max_upload_bytes: int = Field(default=10 * 1024 * 1024, gt=0)

@@ -189,6 +189,7 @@ class QwenVLOCRProvider:
         url = f"{self.base_url}/chat/completions"
         prompt = (
             "Read this receipt image and transcribe all visible text line by line. "
+            "Keep each product and its price in visual order; do not merge or reorder lines. "
             "Preserve merchant names, dates, item names, subtotal, tax, total, "
             "currency symbols, and payment details. Return only plain text."
         )

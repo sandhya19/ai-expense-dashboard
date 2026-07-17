@@ -22,11 +22,15 @@ def find_labeled_amount(
     ignored_terms: list[str] | None = None,
 ) -> Decimal | None:
     label_pattern = "|".join(re.escape(label) for label in labels)
+    optional_leading_count = r"(?:\d+\s+)?"
     same_line_pattern = re.compile(
-        rf"^\s*(?:{label_pattern})\b[^\n\d\u00a3$\u20ac]*(?:{_AMOUNT_PATTERN})",
+        rf"^\s*{optional_leading_count}(?:{label_pattern})\b[^\n\d\u00a3$\u20ac]*(?:{_AMOUNT_PATTERN})",
         re.I,
     )
-    label_only_pattern = re.compile(rf"^\s*(?:{label_pattern})\b[^\d\u00a3$\u20ac]*$", re.I)
+    label_only_pattern = re.compile(
+        rf"^\s*{optional_leading_count}(?:{label_pattern})\b[^\d\u00a3$\u20ac]*$",
+        re.I,
+    )
     ignored_terms = ignored_terms or []
     lines = text.splitlines()
 

@@ -24,6 +24,13 @@ To use Alibaba Model Studio Qwen vision OCR for JPG/PNG receipts, set
 or `QWEN_BASE_URL`. The default model is `qwen-vl-max` through the
 OpenAI-compatible DashScope endpoint.
 
+When `QWEN_API_KEY` is set, ReceiptBrain also enables a Qwen line-item
+refinement pass for receipts whose rule-based line items do not match the
+extracted receipt total. It uses `QWEN_LINE_ITEM_MODEL=qwen-plus` by default
+and accepts its result only when every item has a total and their sum matches
+the receipt total within one penny. Set `QWEN_LINE_ITEM_REFINEMENT=false` to
+turn this fallback off.
+
 For Supabase-backed uploads, configure `.env` with `SUPABASE_URL`,
 `SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`. The service
 verifies forwarded user access tokens through Supabase Auth `/auth/v1/user`;

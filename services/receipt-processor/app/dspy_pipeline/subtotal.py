@@ -8,7 +8,7 @@ class SubtotalExtractionModule:
     def run(self, input_data: OCRTextInput) -> MoneyOutput:
         amount = find_labeled_amount(
             input_data.raw_text,
-            ["subtotal", "sub total", "net total", "goods"],
+            ["subtotal", "sub total", "net total", "amount excluding vat", "goods"],
         )
         return MoneyOutput(
             amount=amount,

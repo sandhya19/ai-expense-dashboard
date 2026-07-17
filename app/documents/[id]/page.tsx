@@ -11,6 +11,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type React from "react";
 import { Button } from "@/components/ui/button";
+import { LineItemsEditor } from "@/components/dashboard/line-items-editor";
 import {
   Card,
   CardContent,
@@ -20,7 +21,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { getReceiptDetail } from "@/lib/receipts";
 import { cn, formatCurrency } from "@/lib/utils";
-import { reprocessReceipt, updateReceiptReview } from "./actions";
+import {
+  reprocessReceipt,
+  updateReceiptLineItems,
+  updateReceiptReview,
+} from "./actions";
 
 type ReceiptDetailPageProps = {
   params: Promise<{
@@ -29,6 +34,7 @@ type ReceiptDetailPageProps = {
   searchParams: Promise<{
     saved?: string;
     reprocessed?: string;
+    itemsSaved?: string;
     error?: string;
   }>;
 };
@@ -74,6 +80,14 @@ export default async function ReceiptDetailPage({
     : null;
   const canPreviewImage = receipt.mime_type?.startsWith("image/");
   const canPreviewPdf = receipt.mime_type === "application/pdf";
+  const reviewedItemTotal = receipt.items.reduce(
+    (sum, item) => sum + Number(item.total ?? 0),
+    0
+  );
+  const lineItemsValidated =
+    receipt.items.length > 0 &&
+    receipt.items.every((item) => item.total !== null) &&
+    Math.abs(reviewedItemTotal - Number(receipt.total)) <= 0.01;
 
   return (
     <div className="space-y-6">
@@ -128,6 +142,13 @@ export default async function ReceiptDetailPage({
         </p>
       )}
 
+      {query.itemsSaved && (
+        <p className="flex items-center gap-2 rounded-md bg-emerald-500/10 p-3 text-sm text-emerald-700 dark:text-emerald-400">
+          <CheckCircle2 className="size-4" />
+          Line items saved.
+        </p>
+      )}
+
       {query.error && (
         <p className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
           <TriangleAlert className="size-4" />
@@ -139,6 +160,9 @@ export default async function ReceiptDetailPage({
         <Card>
           <CardHeader>
             <CardTitle>Reviewed fields</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Correct the merchant and receipt details here, then save them separately from line-item edits.
+            </p>
           </CardHeader>
 
           <CardContent>
@@ -153,7 +177,7 @@ export default async function ReceiptDetailPage({
               />
 
               <label className="space-y-2 md:col-span-2">
-                <span className="text-sm font-medium">Merchant</span>
+                <span className="text-sm font-medium">Merchant name</span>
                 <Input
                   name="merchant"
                   defaultValue={receipt.merchant}
@@ -202,19 +226,13 @@ export default async function ReceiptDetailPage({
                 />
               </label>
 
-              <label className="space-y-2">
-                <span className="text-sm font-medium">Dashboard status</span>
-                <select
-                  name="status"
-                  defaultValue={receipt.status}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <option value="processing">Processing</option>
-                  <option value="review">Review</option>
-                  <option value="completed">Completed</option>
-                  <option value="failed">Failed</option>
-                </select>
-              </label>
+              <div className="space-y-2">
+                <input type="hidden" name="status" value="review" />
+                <span className="text-sm font-medium">Validation status</span>
+                <p className={cn("rounded-md px-3 py-2 text-sm", lineItemsValidated ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" : "bg-amber-500/10 text-amber-700 dark:text-amber-400")}>
+                  {lineItemsValidated ? "Completed automatically — line items match the receipt total." : "Review required — line items must match before completion."}
+                </p>
+              </div>
 
               <label className="flex items-center gap-2 pt-8 text-sm font-medium">
                 <input
@@ -227,7 +245,7 @@ export default async function ReceiptDetailPage({
               </label>
 
               <div className="flex justify-end md:col-span-2">
-                <Button type="submit">Save review</Button>
+                <Button type="submit">Save receipt details</Button>
               </div>
             </form>
           </CardContent>
@@ -399,6 +417,34 @@ export default async function ReceiptDetailPage({
                 <p className="mt-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
                   {receipt.error_message}
                 </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Line items</CardTitle>
+          </CardHeader>
+
+          <CardContent>
+            {receipt.items.length > 0 ? (
+              <LineItemsEditor
+                action={updateReceiptLineItems}
+                items={receipt.items}
+                receiptId={receipt.id}
+              />
+            ) : (
+              <div className="grid min-h-40 place-items-center rounded-lg border border-dashed text-center">
+                <div>
+                  <FileText className="mx-auto size-9 text-muted-foreground" />
+                  <p className="mt-3 text-sm font-medium">
+                    No line items extracted
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    ReceiptBrain will show item-level purchases here when the OCR text includes clear line items.
+                  </p>
+                </div>
               </div>
             )}
           </CardContent>
