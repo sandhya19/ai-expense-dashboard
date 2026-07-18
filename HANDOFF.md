@@ -27,6 +27,8 @@
   `8.5.19` override
 - `services/receipt-processor/app/providers/ocr.py` and its focused tests for
   Qwen OCR plain-text recognition
+- public landing, authenticated dashboard/profile route split, and Qwen-first
+  line-item refinement changes are currently uncommitted
 
 ## Known issues and technical debt
 
@@ -38,6 +40,8 @@
 - Qwen VL provider supports JPG/PNG, not PDF; use another OCR provider for PDF.
 - Deploy the uncommitted Qwen OCR task change before using `qwen-vl-ocr` on ECS;
   it is locally verified but has not yet been committed or pushed.
+- Qwen refinement can still decline a candidate that does not reconcile to the
+  receipt total; this is intentional and preserves the financial trust boundary.
 - Mock data activates without Supabase environment variables and can hide setup
   problems during manual testing.
 
@@ -60,6 +64,8 @@ Alibaba Cloud and add live Supabase/RLS integration tests.
 - Backend: 46 pytest tests, Ruff, and mypy passed before this documentation pass.
 - Backend Qwen provider: 8 focused pytest tests and Ruff passed after the
   Qwen OCR plain-text task update.
+- Public/private route split: TypeScript check passed; 24 focused backend tests
+  and Ruff passed after Qwen-first refinement was added.
 - Build warnings remain for a raw `<img>` receipt preview and Supabase's
   Node-oriented dependency in middleware's Edge Runtime bundle; neither blocks
   the production build.

@@ -84,7 +84,11 @@ class ReceiptProcessingService:
                 )
                 for item in extraction.items.items
             ]
-            if not line_items_match_total(items, total) and self.line_item_refiner is not None:
+            should_refine_items = (
+                not line_items_match_total(items, total)
+                or ocr.provider_name == "qwen_vl"
+            )
+            if should_refine_items and self.line_item_refiner is not None:
                 refined_items = await self.line_item_refiner.refine(ocr.raw_text, total)
                 if refined_items is not None:
                     refined_candidates = [

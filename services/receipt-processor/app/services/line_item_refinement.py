@@ -65,6 +65,8 @@ class QwenLineItemRefiner:
                     "content": (
                         "You extract receipt line items from OCR text. Return JSON only. "
                         "Never invent a product or price. "
+                        "OCR lines may be split, reordered, or separated from their prices; "
+                        "reconnect them only when the receipt text and final total support it. "
                         "Include discounts as negative line items. "
                         "Exclude headers, VAT/tax, subtotals, grand totals, payment/card rows, "
                         "addresses, and promotion slogans. For '2 @ £1.99', set quantity 2, "

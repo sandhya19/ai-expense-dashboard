@@ -87,6 +87,10 @@ class ReceiptTextOCRProvider:
         return OCRResult(raw_text=content.decode(), provider_name=self.name, duration_ms=1)
 
 
+class QwenReceiptTextOCRProvider(ReceiptTextOCRProvider):
+    name = "qwen_vl"
+
+
 class ReconciledLineItemRefiner:
     async def refine(
         self, raw_text: str, receipt_total: Decimal | None
@@ -231,6 +235,30 @@ async def test_receipt_processing_accepts_only_a_reconciled_qwen_refinement() ->
     )
 
     assert updated.status == "completed"
+    assert [item.description for item in repository.items[receipt.id]] == ["Corrected item"]
+
+
+async def test_qwen_ocr_receipts_use_structured_refinement_even_when_items_reconcile() -> None:
+    repository = MemoryReceiptRepository()
+    service = ReceiptProcessingService(
+        repository=repository,
+        ocr_provider=QwenReceiptTextOCRProvider(),
+        embedding_provider=MockEmbeddingProvider(),
+        pipeline=ReceiptExtractionPipeline(),
+        line_item_refiner=ReconciledLineItemRefiner(),
+    )
+    now = datetime.now(UTC)
+    receipt = ReceiptRecord(
+        id="receipt-qwen", user_id="user-1", merchant="Processing receipt",
+        receipt_date=date(2026, 7, 12), category="Uncategorised", total=Decimal("0"),
+        currency="GBP", confidence=0, status="processing", is_business=False,
+        original_filename="receipt.png", storage_path="user-1/receipt.png", mime_type="image/png",
+        file_size=1, processing_status=ProcessingStatus.uploaded, created_at=now, updated_at=now,
+    )
+    repository.records[receipt.id] = receipt
+
+    await service.process(receipt, b"Shop\nItem 20.00\nTotal 20.00")
+
     assert [item.description for item in repository.items[receipt.id]] == ["Corrected item"]
 
 

@@ -74,6 +74,10 @@ For Qwen's dedicated `qwen-vl-ocr` models, the FastAPI processor uses
 DashScope's native `text_recognition` task so receipt parsing receives plain
 text rather than layout coordinates.
 
+The public home page describes ReceiptBrain without exposing any personal
+screens. Authenticated users are sent to `/dashboard`, where uploads, receipt
+history, DNA, Story, AI chat, and profile settings are available.
+
 ## Documentation maintenance rule
 
 At every future Codex session close, update this file, `TODO.md`, `HANDOFF.md`,

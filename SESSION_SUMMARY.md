@@ -13,6 +13,8 @@
   override, and refreshed lockfile.
 - Updated Qwen receipt OCR integration to request Qwen OCR's explicit
   plain-text recognition task and reject coordinate-only layout output.
+- Added a public feature-led home, protected `/dashboard` personal workspace,
+  editable profile settings, and Qwen-first reconciled item refinement.
 - Verified TypeScript, 6 frontend tests, production build, and production npm
   audit (0 vulnerabilities).
 - No new product feature was implemented after the documentation request.
@@ -41,8 +43,8 @@ and increment/hackathon documentation. Refer to `git status --short` and
 Increment 3 — Guided discovery and monthly stories. Three items are implemented;
 achievements UI and insight archive remain.
 
-The next operational milestone is Alibaba Cloud ECS deployment using the patched
-commit and `npm ci` rather than `npm install`.
+The next operational milestone is committing and deploying the uncommitted Qwen
+OCR and public/private experience changes to Alibaba Cloud ECS.
 
 ## Next milestone
 

@@ -89,3 +89,30 @@
   coordinate-only responses are rejected clearly.
 - **Future considerations:** Add PDF-to-image rendering and evaluate Qwen's
   structured key-information task for direct receipt extraction.
+
+## Separate the public product home from the personal finance workspace
+
+- **Decision:** Keep `/` as a feature-led public home; redirect authenticated
+  users to protected `/dashboard` and make profile settings explicit.
+- **Reason:** Personal spending views and upload actions should not appear before
+  sign-in, while visitors still need a compelling product story.
+- **Alternatives considered:** One dashboard for everyone; a marketing page
+  hosted separately; hide individual widgets only.
+- **Date:** 2026-07-18.
+- **Impact:** Clear public/private boundary and a discoverable profile path.
+- **Future considerations:** Add account email change, notification preferences,
+  and a mobile navigation treatment.
+
+## Refine all Qwen OCR receipts with reconciliation guardrails
+
+- **Decision:** Run the structured Qwen line-item refinement pass for Qwen OCR
+  receipts even when heuristic totals reconcile; replace results only on exact
+  reconciliation.
+- **Reason:** OCR text can be spatially scattered while still producing a
+  coincidentally matching total, leaving item descriptions or quantities wrong.
+- **Alternatives considered:** Refine only on a mismatch; always trust OCR;
+  accept non-reconciled model output.
+- **Date:** 2026-07-18.
+- **Impact:** Better item recovery without weakening total-validation rules.
+- **Future considerations:** Track refinement acceptance and evaluate it against
+  anonymised receipt fixtures.

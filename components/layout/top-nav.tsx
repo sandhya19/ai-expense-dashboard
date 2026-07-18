@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 type TopNavProps = {
   fullName: string | null;
@@ -69,6 +70,7 @@ export function TopNav({
           )}
         </Button>
 
+        <Link href="/settings" className="ml-2 flex items-center gap-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" title={`Personal settings for ${accountLabel}`}>
         <div
           title={accountLabel}
           aria-label={accountLabel}
@@ -76,6 +78,8 @@ export function TopNav({
         >
           {initials ?? <User className="size-5" />}
         </div>
+        <span className="hidden max-w-40 truncate text-sm font-medium sm:block">{accountLabel}</span>
+        </Link>
       </div>
     </header>
   );

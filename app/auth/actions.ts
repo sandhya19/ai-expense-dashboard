@@ -105,3 +105,12 @@ export async function signOut() {
   revalidatePath("/", "layout");
   redirect("/auth/login");
 }
+
+export async function updateProfile(formData: FormData) {
+  const fullName = String(formData.get("fullName") ?? "").trim();
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ data: { full_name: fullName } });
+  if (error) redirect(`/settings?error=${encodeURIComponent(error.message)}`);
+  revalidatePath("/", "layout");
+  redirect("/settings?updated=1");
+}
