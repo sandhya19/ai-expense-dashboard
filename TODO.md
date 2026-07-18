@@ -14,6 +14,7 @@
 | Task | Description | Impact | Verification |
 | --- | --- | --- | --- |
 | Frontend dependency security patch | Updated Next.js to `15.5.20` and enforced PostCSS `8.5.19`. | Removes deployment-blocking critical audit findings | Typecheck, tests, production build, and production audit passed with 0 vulnerabilities on 2026-07-18. |
+| Qwen OCR plain-text integration | Routes dedicated Qwen OCR models to DashScope `text_recognition` and rejects coordinate-only output. | Restores usable receipt extraction on ECS | 8 focused provider tests and Ruff passed on 2026-07-18. |
 
 ## Medium priority
 

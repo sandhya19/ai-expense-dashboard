@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import logging
+import re
 import time
 from typing import Protocol
 
@@ -186,6 +187,10 @@ class QwenVLOCRProvider:
     async def _request_ocr(self, content: bytes, mime_type: str) -> str:
         image_data = base64.b64encode(content).decode("ascii")
         data_uri = f"data:{mime_type};base64,{image_data}"
+
+        if self.model.startswith("qwen-vl-ocr"):
+            return await self._request_qwen_ocr_text_recognition(data_uri)
+
         url = f"{self.base_url}/chat/completions"
         prompt = (
             "Read this receipt image and transcribe all visible text line by line. "
@@ -213,7 +218,51 @@ class QwenVLOCRProvider:
         async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
             response = await client.post(url, headers=headers, json=payload)
             response.raise_for_status()
-            return self._extract_content(response.json())
+            text = self._extract_content(response.json())
+
+        self._raise_if_coordinate_only(text)
+        return text
+
+    async def _request_qwen_ocr_text_recognition(self, data_uri: str) -> str:
+        """Use Qwen OCR's native text-recognition task, which returns plain text.
+
+        The OpenAI-compatible endpoint supports general vision prompts, but the
+        dedicated OCR model can otherwise return localization coordinates. The
+        native DashScope task makes the plain-text contract explicit.
+        """
+
+        url = "https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation"
+        payload = {
+            "model": self.model,
+            "input": {
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "image": data_uri,
+                                "min_pixels": 3072,
+                                "max_pixels": 8388608,
+                                "enable_rotate": True,
+                            }
+                        ],
+                    }
+                ]
+            },
+            "parameters": {"ocr_options": {"task": "text_recognition"}},
+        }
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+
+        async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
+            response = await client.post(url, headers=headers, json=payload)
+            response.raise_for_status()
+            text = self._extract_native_qwen_ocr_content(response.json())
+
+        self._raise_if_coordinate_only(text)
+        return text
 
     def _extract_content(self, payload: object) -> str:
         if not isinstance(payload, dict):
@@ -243,6 +292,24 @@ class QwenVLOCRProvider:
             return "\n".join(part.strip() for part in parts if part.strip())
 
         raise ExternalProviderError("Qwen OCR response content was empty")
+
+    def _extract_native_qwen_ocr_content(self, payload: object) -> str:
+        if not isinstance(payload, dict):
+            raise ExternalProviderError("Qwen OCR response was not an object")
+
+        output = payload.get("output")
+        if not isinstance(output, dict):
+            raise ExternalProviderError("Qwen OCR response did not include output")
+
+        return self._extract_content(output)
+
+    def _raise_if_coordinate_only(self, text: str) -> None:
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        coordinate_line = re.compile(r"^\d+(?:,\d+){4}$")
+        if lines and all(coordinate_line.fullmatch(line) for line in lines):
+            raise ExternalProviderError(
+                "Qwen OCR returned layout coordinates instead of receipt text"
+            )
 
 
 def create_ocr_provider(settings: Settings) -> OCRProvider:

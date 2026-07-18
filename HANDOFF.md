@@ -25,6 +25,8 @@
 - increment, hackathon, and root project-memory documents
 - `package.json` and `package-lock.json` for Next.js `15.5.20` and PostCSS
   `8.5.19` override
+- `services/receipt-processor/app/providers/ocr.py` and its focused tests for
+  Qwen OCR plain-text recognition
 
 ## Known issues and technical debt
 
@@ -34,6 +36,8 @@
   CI database test is committed.
 - Processing is synchronous; OCR/model requests hold the upload request.
 - Qwen VL provider supports JPG/PNG, not PDF; use another OCR provider for PDF.
+- Deploy the uncommitted Qwen OCR task change before using `qwen-vl-ocr` on ECS;
+  it is locally verified but has not yet been committed or pushed.
 - Mock data activates without Supabase environment variables and can hide setup
   problems during manual testing.
 
@@ -54,6 +58,8 @@ Alibaba Cloud and add live Supabase/RLS integration tests.
 - Frontend: 6 Vitest tests, TypeScript check, and a production build passed on
   Next.js `15.5.20`; production `npm audit --omit=dev` reports 0 vulnerabilities.
 - Backend: 46 pytest tests, Ruff, and mypy passed before this documentation pass.
+- Backend Qwen provider: 8 focused pytest tests and Ruff passed after the
+  Qwen OCR plain-text task update.
 - Build warnings remain for a raw `<img>` receipt preview and Supabase's
   Node-oriented dependency in middleware's Edge Runtime bundle; neither blocks
   the production build.

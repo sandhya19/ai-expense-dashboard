@@ -11,6 +11,8 @@
 - Created the root project-memory documentation requested for future sessions.
 - Security-patched deployment dependencies: Next.js `15.5.20`, PostCSS `8.5.19`
   override, and refreshed lockfile.
+- Updated Qwen receipt OCR integration to request Qwen OCR's explicit
+  plain-text recognition task and reject coordinate-only layout output.
 - Verified TypeScript, 6 frontend tests, production build, and production npm
   audit (0 vulnerabilities).
 - No new product feature was implemented after the documentation request.

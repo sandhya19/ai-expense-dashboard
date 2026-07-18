@@ -75,3 +75,17 @@
   authoritative deployment input and servers must use `npm ci`.
 - **Future considerations:** Re-run audit during each release and remove the
   override once Next publishes a release that no longer pins vulnerable PostCSS.
+
+## Use Qwen OCR's explicit plain-text task for receipt transcription
+
+- **Decision:** Route `qwen-vl-ocr` models through DashScope's native
+  `text_recognition` task instead of relying on a general vision prompt.
+- **Reason:** Coordinate-only localization output cannot be safely parsed into
+  receipt data; the explicit OCR task has a plain-text response contract.
+- **Alternatives considered:** Continue using the OpenAI-compatible prompt;
+  parse coordinate-only results; return to Google Vision only.
+- **Date:** 2026-07-18.
+- **Impact:** Qwen OCR output is usable by the existing receipt parser and
+  coordinate-only responses are rejected clearly.
+- **Future considerations:** Add PDF-to-image rendering and evaluate Qwen's
+  structured key-information task for direct receipt extraction.

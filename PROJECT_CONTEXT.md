@@ -70,6 +70,10 @@ The frontend dependency tree was security-patched on 2026-07-18: Next.js is
 pinned to `15.5.20` and PostCSS to `8.5.19` through an npm override; the
 production dependency audit reports zero vulnerabilities.
 
+For Qwen's dedicated `qwen-vl-ocr` models, the FastAPI processor uses
+DashScope's native `text_recognition` task so receipt parsing receives plain
+text rather than layout coordinates.
+
 ## Documentation maintenance rule
 
 At every future Codex session close, update this file, `TODO.md`, `HANDOFF.md`,
