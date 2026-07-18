@@ -52,3 +52,8 @@ export type SpendingDnaTrait = {
   description: string;
   score: number;
 };
+
+export type SpendingDnaProfile = {
+  receipts: Receipt[];
+  dna: SpendingDnaTrait[];
+};

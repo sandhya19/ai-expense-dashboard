@@ -24,6 +24,14 @@ Official event pages:
 - [x] Qwen-backed receipt OCR and grounded Qwen finance chat are implemented.
 - [x] User corrections, validation, and receipt citations make AI output
   reviewable rather than opaque.
+- [x] Dedicated Spending DNA page explains evidence-backed spending traits and
+  shows how they develop over time.
+- [x] Security-patched the production frontend dependency tree (Next.js 15.5.20,
+  PostCSS 8.5.19); typecheck, tests, build, and production audit pass locally.
+- [x] Private, shareable monthly Spending Story turns a grounded insight into a
+  polished demo moment without exposing receipt images or line items.
+- [x] Spending-rhythm insights make the finance companion feel personal while
+  remaining grounded in the user’s own receipt dates and totals.
 - [ ] Deploy the Next.js app and FastAPI receipt service on Alibaba Cloud.
 - [ ] Configure production `QWEN_API_KEY`, Supabase, storage, and OCR settings
   as secret environment variables in the deployment platform.
@@ -38,7 +46,8 @@ Official event pages:
 
 1. Upload a real receipt and show OCR extraction.
 2. Correct a line item and show that completion is blocked until totals match.
-3. Open the spending story and explain one evidence-backed insight.
+3. Open the Spending Story, then Spending DNA, and explain one evidence-backed
+   insight and one evolving trait.
 4. Ask Qwen a receipt-specific question and show its cited answer.
 5. Close with the privacy boundary: receipt data stays scoped to the signed-in
    user and Qwen receives only the minimum receipt context needed for the

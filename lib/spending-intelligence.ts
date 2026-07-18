@@ -109,6 +109,31 @@ export function buildSpendingStory(receipts: Receipt[], now = new Date()): Spend
     });
   }
 
+  if (currentReceipts.length >= 3) {
+    const spendByDay = new Map<string, { amount: number; purchases: number }>();
+    currentReceipts.forEach((receipt) => {
+      const day = new Intl.DateTimeFormat("en-GB", { weekday: "long" }).format(
+        new Date(`${receipt.receipt_date}T12:00:00`)
+      );
+      const previous = spendByDay.get(day) ?? { amount: 0, purchases: 0 };
+      spendByDay.set(day, { amount: previous.amount + amount(receipt), purchases: previous.purchases + 1 });
+    });
+    const biggestDay = Array.from(spendByDay.entries()).sort(([, left], [, right]) => right.amount - left.amount)[0];
+    if (biggestDay) {
+      const [day, details] = biggestDay;
+      insights.push({
+        id: "spending-rhythm",
+        insight_type: "spending_pattern",
+        title: `${day} is your biggest spending day`,
+        description: "Your receipt history has started to reveal a weekly rhythm.",
+        supporting_data: `${formatAmount(details.amount)} across ${details.purchases} purchase${details.purchases === 1 ? "" : "s"}`,
+        recommendation: "Plan one small pause before your next usual spending day if you want more room in the week.",
+        impact: "low",
+        confidence: 0.86,
+      });
+    }
+  }
+
   const recurringMerchants = new Map<string, Receipt[]>();
   receipts.forEach((receipt) => {
     const merchant = receipt.merchant.toLowerCase();
@@ -150,7 +175,7 @@ export function buildSpendingStory(receipts: Receipt[], now = new Date()): Spend
     total,
     previousTotal: previousTotal || null,
     changePercent,
-    insights: insights.slice(0, 3),
+    insights: insights.slice(0, 4),
   };
 }
 

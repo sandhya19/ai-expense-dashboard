@@ -36,9 +36,9 @@ This checklist tracks the premium personal-finance companion roadmap. A feature 
 
 ## Increment 3 — Guided discovery and monthly stories
 
-- [ ] Build a dedicated Spending DNA page with trait explanations and history.
-- [ ] Build a shareable monthly “Spending Story” / Wrapped-style experience.
-- [ ] Add day-of-week and spending-rhythm insights.
+- [x] Build a dedicated Spending DNA page with trait explanations and history.
+- [x] Build a shareable monthly “Spending Story” / Wrapped-style experience.
+- [x] Add day-of-week and spending-rhythm insights.
 - [ ] Add lightweight premium achievements: streaks, savings moments, and smart-shopper badges.
 - [ ] Add an insight archive with dismiss and feedback actions.
 

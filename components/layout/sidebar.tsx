@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Bot, FileText, LayoutDashboard, PanelLeftClose, PanelLeftOpen, Receipt } from "lucide-react";
+import { Bot, BrainCircuit, FileText, LayoutDashboard, PanelLeftClose, PanelLeftOpen, Receipt, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SignOutButton } from "@/components/auth/sign-out-button";
@@ -11,6 +11,8 @@ import { SignOutButton } from "@/components/auth/sign-out-button";
 const items = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/documents", label: "Receipt timeline", icon: FileText },
+  { href: "/spending-dna", label: "Spending DNA", icon: BrainCircuit },
+  { href: "/spending-story", label: "Spending Story", icon: Sparkles },
   { href: "/ai-chat", label: "AI Chat", icon: Bot }
 ] as const;
 

@@ -2,12 +2,12 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { mockDashboardData } from "@/lib/mock-data";
 import { buildSpendingDna, buildSpendingStory } from "@/lib/spending-intelligence";
-import type { DashboardData, Receipt } from "@/lib/types";
+import type { DashboardData, Receipt, SpendingDnaProfile } from "@/lib/types";
 
 const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 
-export async function getDashboardData(): Promise<DashboardData> {
-  if (!configured) return mockDashboardData;
+async function getReceipts(): Promise<Receipt[]> {
+  if (!configured) return mockDashboardData.recent;
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -16,7 +16,17 @@ export async function getDashboardData(): Promise<DashboardData> {
     .order("receipt_date", { ascending: false });
 
   if (error) throw new Error(`Unable to load receipts: ${error.message}`);
-  const receipts = (data ?? []) as Receipt[];
+  return (data ?? []) as Receipt[];
+}
+
+export async function getSpendingDnaProfile(): Promise<SpendingDnaProfile> {
+  const receipts = await getReceipts();
+  return { receipts, dna: buildSpendingDna(receipts) };
+}
+
+export async function getDashboardData(): Promise<DashboardData> {
+  if (!configured) return mockDashboardData;
+  const receipts = await getReceipts();
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
