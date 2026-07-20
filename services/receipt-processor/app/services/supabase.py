@@ -29,6 +29,9 @@ class ReceiptRepository(Protocol):
     async def update(self, receipt_id: str, values: dict[str, object]) -> ReceiptRecord:
         """Update a receipt."""
 
+    async def delete(self, receipt_id: str) -> None:
+        """Delete a receipt and database rows that depend on it."""
+
     async def replace_items(self, receipt_id: str, items: list[ReceiptItemCreate]) -> None:
         """Replace extracted receipt line items."""
 
@@ -78,6 +81,11 @@ class MemoryReceiptRepository:
         updated = record.model_copy(update={**values, "updated_at": datetime.now(UTC)})
         self.records[receipt_id] = updated
         return updated
+
+    async def delete(self, receipt_id: str) -> None:
+        self.records.pop(receipt_id, None)
+        self.items.pop(receipt_id, None)
+        self.insights.pop(receipt_id, None)
 
     async def replace_items(self, receipt_id: str, items: list[ReceiptItemCreate]) -> None:
         self.items[receipt_id] = items
@@ -161,6 +169,18 @@ class SupabaseReceiptRepository:
             )
             response.raise_for_status()
             return ReceiptRecord.model_validate(response.json()[0])
+
+    async def delete(self, receipt_id: str) -> None:
+        async with httpx.AsyncClient(timeout=30) as client:
+            await client.delete(
+                f"{self._table_url('insights')}?receipt_id=eq.{receipt_id}",
+                headers=self._headers,
+            )
+            response = await client.delete(
+                f"{self._base_url}?id=eq.{receipt_id}",
+                headers=self._headers,
+            )
+            response.raise_for_status()
 
     async def replace_items(self, receipt_id: str, items: list[ReceiptItemCreate]) -> None:
         async with httpx.AsyncClient(timeout=30) as client:

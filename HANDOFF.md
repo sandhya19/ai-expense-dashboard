@@ -66,6 +66,11 @@ Alibaba Cloud and add live Supabase/RLS integration tests.
   Qwen OCR plain-text task update.
 - Public/private route split: TypeScript check passed; 24 focused backend tests
   and Ruff passed after Qwen-first refinement was added.
+- Account-menu and Aldi parser correction: TypeScript check, 24 parser and
+  refinement tests, and Ruff passed.
+- Account-menu surface: TypeScript check passed after switching the profile
+  button and popover to opaque card surfaces.
+- Receipt deletion: TypeScript check, 15 processor API tests, and Ruff passed.
 - Build warnings remain for a raw `<img>` receipt preview and Supabase's
   Node-oriented dependency in middleware's Edge Runtime bundle; neither blocks
   the production build.

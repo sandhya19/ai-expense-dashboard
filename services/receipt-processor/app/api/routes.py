@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends, File, Response, UploadFile, status
 
 from app.api.deps import get_current_user, get_receipt_service
 from app.core.config import Settings, get_settings
@@ -42,3 +42,13 @@ async def reprocess_receipt(
 ) -> ReceiptResponse:
     receipt = await service.reprocess_for_user(receipt_id, user)
     return ReceiptResponse(receipt=receipt)
+
+
+@router.delete("/v1/receipts/{receipt_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_receipt(
+    receipt_id: str,
+    user: AuthenticatedUser = Depends(get_current_user),
+    service: ReceiptService = Depends(get_receipt_service),
+) -> Response:
+    await service.delete_for_user(receipt_id, user)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -116,5 +116,21 @@ For Qwen Cloud / Alibaba Cloud submission preparation, use the checklist in
 
 ## Architecture
 
-See `docs/architecture.md` for the Qwen OCR flow, Qwen receipt reasoning flow,
+See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the Qwen OCR flow, Qwen receipt reasoning flow,
 service boundaries, review loop, and scalability notes.
+
+## Alibaba Cloud ECS deployment
+
+ReceiptBrain includes a two-service container setup for Alibaba Cloud ECS.
+Copy the two files in `deploy/` ending with `.env.example` to the equivalent
+`.env` files on the server, fill server-only secrets, then run:
+
+```bash
+docker compose -f deploy/docker-compose.ecs.yml up -d --build
+curl http://127.0.0.1:3000/api/health
+curl http://127.0.0.1:8001/health
+```
+
+Terminate HTTPS with Nginx and proxy traffic to `127.0.0.1:3000`; do not expose
+the processor port publicly. See [`docs/JUDGE_REVIEW.md`](docs/JUDGE_REVIEW.md)
+for the pre-submission smoke test and evidence checklist.

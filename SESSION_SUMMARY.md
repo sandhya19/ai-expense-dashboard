@@ -15,6 +15,12 @@
   plain-text recognition task and reject coordinate-only layout output.
 - Added a public feature-led home, protected `/dashboard` personal workspace,
   editable profile settings, and Qwen-first reconciled item refinement.
+- Moved settings/sign-out into the top-right account menu and added an Aldi
+  regression fixture for `2 x 2.99` followed by a product name and `5.98`.
+- Made the top-right account control and its menu opaque, bordered card
+  surfaces rather than transparent header content.
+- Added owner-authorised receipt deletion from the document page, including
+  removal of dependent receipt data and the private original file.
 - Verified TypeScript, 6 frontend tests, production build, and production npm
   audit (0 vulnerabilities).
 - No new product feature was implemented after the documentation request.

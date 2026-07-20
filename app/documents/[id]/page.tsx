@@ -12,6 +12,7 @@ import { notFound } from "next/navigation";
 import type React from "react";
 import { Button } from "@/components/ui/button";
 import { LineItemsEditor } from "@/components/dashboard/line-items-editor";
+import { DeleteReceiptButton } from "@/components/dashboard/delete-receipt-button";
 import {
   Card,
   CardContent,
@@ -23,6 +24,7 @@ import { getReceiptDetail } from "@/lib/receipts";
 import { cn, formatCurrency } from "@/lib/utils";
 import {
   reprocessReceipt,
+  deleteReceipt,
   updateReceiptLineItems,
   updateReceiptReview,
 } from "./actions";
@@ -269,6 +271,7 @@ export default async function ReceiptDetailPage({
                 Reprocess
               </Button>
             </form>
+            <DeleteReceiptButton action={deleteReceipt} receiptId={receipt.id} />
           </CardHeader>
 
           <CardContent>

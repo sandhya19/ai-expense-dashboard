@@ -54,6 +54,7 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/documents") ||
     pathname.startsWith("/analytics") ||
+    pathname.startsWith("/memory") ||
     pathname.startsWith("/settings") ||
     pathname.startsWith("/ai-chat");
 

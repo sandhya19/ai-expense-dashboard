@@ -116,3 +116,36 @@
 - **Impact:** Better item recovery without weakening total-validation rules.
 - **Future considerations:** Track refinement acceptance and evaluate it against
   anonymised receipt fixtures.
+
+## Put account actions in the top-right profile menu
+
+- **Decision:** Remove personal settings and sign-out from the sidebar and show
+  them in the profile menu beside the user identity.
+- **Reason:** Account actions should remain easy to reach regardless of sidebar
+  length and belong with the visible user context.
+- **Alternatives considered:** Persistent sidebar footer; a settings nav item.
+- **Date:** 2026-07-18.
+- **Impact:** Simpler navigation and an obvious, compact sign-out location.
+- **Future considerations:** Add keyboard escape/outside-click behaviour if the
+  lightweight account menu grows.
+
+## Use opaque account surfaces
+
+- **Decision:** Render the profile trigger and account menu on solid card
+  backgrounds with borders and elevation.
+- **Reason:** The account affordance must remain visible over a translucent app
+  header and clearly communicate interactivity.
+- **Alternatives considered:** Transparent text-only trigger; no menu surface.
+- **Date:** 2026-07-18.
+- **Impact:** Better contrast and a more premium, dependable profile control.
+
+## Delete receipts through the processor with an owner check
+
+- **Decision:** The document delete action calls an authenticated processor
+  endpoint, which verifies ownership before deleting the receipt and file.
+- **Reason:** Browser-only deletion risks inconsistent RLS/storage behaviour and
+  cannot safely use the trusted storage credential.
+- **Alternatives considered:** Hide faulty receipts; browser-direct deletion.
+- **Date:** 2026-07-18.
+- **Impact:** Users can remove mistaken uploads without access to other users'
+  data.

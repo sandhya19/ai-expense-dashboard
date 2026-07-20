@@ -21,3 +21,10 @@ def test_refinement_json_rejects_items_without_a_total() -> None:
     assert _json_from_model_response(
         '{"items":[{"description":"Gift bag","quantity":1,"unit_price":null,"total":null}]}'
     ) is None
+
+
+def test_refinement_rejects_a_redundant_quantity_unit_price_item() -> None:
+    assert _json_from_model_response(
+        '{"items":[{"description":"PEACH 1KG","quantity":1,"unit_price":2.99,"total":2.99},'
+        '{"description":"PEACH 1KG","quantity":2,"unit_price":2.99,"total":5.98}]}'
+    ) is None

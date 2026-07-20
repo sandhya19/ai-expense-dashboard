@@ -40,7 +40,8 @@ _UNIT_PRICE_ONLY_PATTERN = re.compile(
     rf"^\s*(?P<amount>{_MONEY_PATTERN})\s+each\s*$", re.I
 )
 _QUANTITY_AT_UNIT_PRICE_PATTERN = re.compile(
-    rf"^\s*(?P<quantity>\d+(?:\.\d+)?)\s*@\s*(?P<unit_price>{_MONEY_PATTERN})\s*$",
+    r"^\s*(?P<quantity>\d+(?:\.\d+)?)\s*(?:x|@)\s*"
+    r"(?P<unit_price>(?:GBP|USD|EUR)?\s*[\u00a3$\u20ac]?\s*\d+(?:\.\d{2})?)\s*$",
     re.I,
 )
 _DISCOUNT_LINE_PATTERN = re.compile(r"^\s*-|-\s*(?:GBP|USD|EUR)?\s*[\u00a3$\u20ac]", re.I)
@@ -451,9 +452,12 @@ class ItemExtractionModule:
                 ):
                     items[-1].quantity = quantity
                     items[-1].unit_price = unit_price
-                pending_quantity = None
-                pending_unit_price = None
-                unassigned_total = None
+                    pending_quantity = None
+                    pending_unit_price = None
+                    unassigned_total = None
+                else:
+                    pending_quantity = quantity
+                    pending_unit_price = unit_price
                 continue
 
             quantity_match = _QUANTITY_ONLY_PATTERN.match(normalized_line)

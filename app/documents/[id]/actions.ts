@@ -143,6 +143,32 @@ export async function reprocessReceipt(formData: FormData) {
   redirect(`/documents/${parsed.data.id}?reprocessed=1`);
 }
 
+export async function deleteReceipt(formData: FormData) {
+  const parsed = reprocessSchema.safeParse({ id: formData.get("id") });
+  if (!parsed.success) redirect("/documents?error=Invalid%20receipt%20delete%20request.");
+
+  const receiptServiceUrl = process.env.RECEIPT_SERVICE_URL;
+  if (!receiptServiceUrl) redirect(`/documents/${parsed.data.id}?error=Receipt%20processing%20service%20is%20not%20configured.`);
+
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) redirect(`/documents/${parsed.data.id}?error=Your%20session%20has%20expired.`);
+
+  const response = await fetch(new URL(`/v1/receipts/${parsed.data.id}`, receiptServiceUrl), {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${session.access_token}` },
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    redirect(`/documents/${parsed.data.id}?error=${encodeURIComponent(getFastApiError(body, "Receipt deletion failed."))}`);
+  }
+
+  revalidatePath("/");
+  revalidatePath("/dashboard");
+  revalidatePath("/documents");
+  redirect("/documents?deleted=1");
+}
+
 export async function updateReceiptReview(formData: FormData) {
   const parsed = reviewSchema.safeParse({
     id: formData.get("id"),

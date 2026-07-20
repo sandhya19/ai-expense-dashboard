@@ -38,7 +38,35 @@ def _json_from_model_response(content: str) -> _RefinedItemsResponse | None:
         return None
     if any(not item.description.strip() or item.total is None for item in parsed.items):
         return None
+    if _has_redundant_quantity_unit_item(parsed.items):
+        return None
     return parsed
+
+
+def _has_redundant_quantity_unit_item(items: list[LineItemOutput]) -> bool:
+    """Reject a model candidate that treats a quantity/unit row as another item."""
+    for unit_entry in items:
+        if (
+            unit_entry.quantity not in (None, Decimal("1"))
+            or unit_entry.unit_price is None
+            or unit_entry.total != unit_entry.unit_price
+        ):
+            continue
+        for quantity_entry in items:
+            same_description = (
+                quantity_entry.description.casefold()
+                == unit_entry.description.casefold()
+            )
+            if quantity_entry is unit_entry or not same_description:
+                continue
+            if (
+                quantity_entry.quantity is not None
+                and quantity_entry.quantity > Decimal("1")
+                and quantity_entry.unit_price == unit_entry.unit_price
+                and quantity_entry.total == quantity_entry.quantity * quantity_entry.unit_price
+            ):
+                return True
+    return False
 
 
 class QwenLineItemRefiner:
@@ -67,6 +95,9 @@ class QwenLineItemRefiner:
                         "Never invent a product or price. "
                         "OCR lines may be split, reordered, or separated from their prices; "
                         "reconnect them only when the receipt text and final total support it. "
+                        "For '2 x 2.99', a following product name, and total 5.98, return one "
+                        "item with quantity 2 and total 5.98; never add the 2.99 unit row "
+                        "as an item. "
                         "Include discounts as negative line items. "
                         "Exclude headers, VAT/tax, subtotals, grand totals, payment/card rows, "
                         "addresses, and promotion slogans. For '2 @ £1.99', set quantity 2, "

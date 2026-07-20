@@ -77,6 +77,11 @@ text rather than layout coordinates.
 The public home page describes ReceiptBrain without exposing any personal
 screens. Authenticated users are sent to `/dashboard`, where uploads, receipt
 history, DNA, Story, AI chat, and profile settings are available.
+Settings and sign-out are grouped in the top-right profile menu, keeping the
+sidebar focused on spending workflows; the account control and menu use opaque
+card surfaces for reliable contrast.
+Receipt owners can delete a receipt from its document page; the processor removes
+the database record and attempts to remove the private original file.
 
 ## Documentation maintenance rule
 

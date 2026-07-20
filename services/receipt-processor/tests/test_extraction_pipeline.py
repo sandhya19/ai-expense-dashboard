@@ -333,6 +333,21 @@ def test_pipeline_extracts_aldi_multiline_items_from_qwen_ocr() -> None:
     ]
 
 
+def test_pipeline_uses_quantity_unit_price_row_for_one_aldi_item() -> None:
+    result = ReceiptExtractionPipeline().run("""
+    ALDI STORES
+    2 x 2.99
+    522983 PEACH 1KG
+    5.98 A
+    Total 5.98
+    """)
+
+    assert [item.description for item in result.items.items] == ["PEACH 1KG"]
+    assert [item.quantity for item in result.items.items] == [Decimal("2")]
+    assert [item.unit_price for item in result.items.items] == [Decimal("2.99")]
+    assert [item.total for item in result.items.items] == [Decimal("5.98")]
+
+
 def test_pipeline_ignores_receipt_footer_references_that_contain_decimal_dates() -> None:
     raw_text = """
     ALDI STORES
