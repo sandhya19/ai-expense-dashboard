@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Bot, FileText, LayoutDashboard, PanelLeftClose, PanelLeftOpen, Receipt } from "lucide-react";
+import { Bot, FileText, LayoutDashboard, Lightbulb, PanelLeftClose, PanelLeftOpen, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -10,7 +10,8 @@ import { cn } from "@/lib/utils";
 const items = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/documents", label: "Receipt timeline", icon: FileText },
-  { href: "/ai-chat", label: "AI Chat", icon: Bot }
+  { href: "/ai-chat", label: "AI Chat", icon: Bot },
+  { href: "/action-plan", label: "Weekly plan", icon: Lightbulb }
 ] as const;
 
 export function Sidebar() {

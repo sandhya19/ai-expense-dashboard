@@ -10,5 +10,6 @@ export async function GET() {
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
     ),
     qwenChatConfigured: Boolean(process.env.QWEN_API_KEY),
+    openAiWeeklyPlanConfigured: Boolean(process.env.OPENAI_API_KEY),
   });
 }
