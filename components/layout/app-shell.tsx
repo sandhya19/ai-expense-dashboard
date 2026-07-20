@@ -18,6 +18,8 @@ export async function AppShell({
       ? user.user_metadata.full_name
       : null;
 
+  if (!user) return <>{children}</>;
+
   return (
     <div className="flex min-h-screen bg-muted/30">
       <Sidebar />

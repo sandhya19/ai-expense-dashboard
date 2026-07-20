@@ -1,0 +1,19 @@
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    env_file: ./receiptbrain-web.env
+    ports:
+      - "127.0.0.1:3000:3000"
+    restart: unless-stopped
+    depends_on:
+      - receipt-processor
+
+  receipt-processor:
+    build:
+      context: ../services/receipt-processor
+    env_file: ./receipt-processor.env
+    ports:
+      - "127.0.0.1:8001:8000"
+    restart: unless-stopped

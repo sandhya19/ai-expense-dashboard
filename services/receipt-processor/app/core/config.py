@@ -21,9 +21,14 @@ class Settings(BaseSettings):
     supabase_receipts_table: str = "receipts"
     supabase_receipt_items_table: str = "receipt_items"
 
-    ocr_provider: Literal["mock", "google_vision"] = "mock"
+    ocr_provider: Literal["mock", "google_vision", "qwen_vl"] = "mock"
     ocr_timeout_seconds: float = 20
     ocr_max_retries: int = 2
+    qwen_api_key: str = ""
+    qwen_base_url: str = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
+    qwen_model: str = "qwen-vl-max"
+    qwen_line_item_refinement: bool = True
+    qwen_line_item_model: str = "qwen-plus"
 
     embedding_provider: Literal["mock"] = "mock"
     max_upload_bytes: int = Field(default=10 * 1024 * 1024, gt=0)

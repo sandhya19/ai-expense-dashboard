@@ -11,5 +11,8 @@ __pycache__
 *.egg-info
 coverage
 *.log
+*.swp
 tsconfig.tsbuildinfo
 .DS_Store
+linkedin-ai-expense-dashboard-10-day-series.md
+deploy/*.env

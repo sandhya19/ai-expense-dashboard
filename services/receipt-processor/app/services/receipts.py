@@ -1,3 +1,4 @@
+import logging
 from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
@@ -15,6 +16,8 @@ ALLOWED_MIME_TYPES = {
     "image/png": {".png"},
     "application/pdf": {".pdf"},
 }
+
+logger = logging.getLogger(__name__)
 
 
 class ReceiptService:
@@ -61,6 +64,25 @@ class ReceiptService:
                 detail="Receipt access denied",
             )
         return receipt
+
+    async def reprocess_for_user(self, receipt_id: str, user: AuthenticatedUser) -> ReceiptRecord:
+        receipt = await self.get_for_user(receipt_id, user)
+        try:
+            content = await self.storage.download(receipt.storage_path)
+        except Exception as exc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Receipt file could not be loaded",
+            ) from exc
+        return await self.processor.process(receipt, content)
+
+    async def delete_for_user(self, receipt_id: str, user: AuthenticatedUser) -> None:
+        receipt = await self.get_for_user(receipt_id, user)
+        await self.repository.delete(receipt.id)
+        try:
+            await self.storage.delete(receipt.storage_path)
+        except Exception:
+            logger.exception("receipt_file_delete_failed receipt_id=%s", receipt.id)
 
     async def _validate_upload(self, file: UploadFile) -> FileValidationResult:
         if not file.filename:

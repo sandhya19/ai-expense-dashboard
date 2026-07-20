@@ -20,5 +20,21 @@ export const mockDashboardData: DashboardData = {
     { id: "3", merchant: "Pret A Manger", receipt_date: "2026-06-26", category: "Meals", total: 18.45, confidence: 99, status: "completed", is_business: false, created_at: "2026-06-26T12:00:00Z" },
     { id: "4", merchant: "Adobe", receipt_date: "2026-06-25", category: "Software", total: 59.99, confidence: 97, status: "completed", is_business: true, created_at: "2026-06-25T12:00:00Z" },
     { id: "5", merchant: "Uber", receipt_date: "2026-06-24", category: "Travel", total: 32.8, confidence: 89, status: "processing", is_business: true, created_at: "2026-06-24T12:00:00Z" }
-  ]
+  ],
+  story: {
+    periodLabel: "July",
+    total: 2841.64,
+    previousTotal: 2420,
+    changePercent: 17,
+    insights: [
+      { id: "monthly-spend", insight_type: "monthly_comparison", title: "You spent 17% more this month", description: "Your tracked spending is higher than last month.", supporting_data: "This month: £2,841.64 · Last month: £2,420.00", recommendation: "Open your recent purchases to see what changed.", impact: "medium", confidence: 0.98 },
+      { id: "travel-focus", insight_type: "spending_pattern", title: "Travel shaped your month", description: "It accounts for 32% of your tracked spending so far.", supporting_data: "£909.33 across 3 receipts", recommendation: "Compare a few purchases in this category before your next spend.", impact: "medium", confidence: 0.96 },
+    ],
+  },
+  dna: [
+    { id: "coffee-explorer", label: "Coffee Explorer", description: "Cafés and coffee moments", score: 62 },
+    { id: "food-lover", label: "Food Lover", description: "Meals, groceries, and dining", score: 74 },
+    { id: "traveller", label: "Traveller", description: "Getting around and getting away", score: 88 },
+    { id: "smart-shopper", label: "Smart Shopper", description: "Value-led places and savings signals", score: 48 },
+  ],
 };

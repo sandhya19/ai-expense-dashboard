@@ -6,6 +6,7 @@ from app.dspy_pipeline.pipeline import ReceiptExtractionPipeline
 from app.models.auth import AuthenticatedUser
 from app.providers.embeddings import MockEmbeddingProvider
 from app.providers.ocr import OCRProvider, create_ocr_provider
+from app.services.line_item_refinement import LineItemRefiner, create_line_item_refiner
 from app.services.processing import ReceiptProcessingService
 from app.services.receipts import ReceiptService
 from app.services.storage import MemoryReceiptStorage, ReceiptStorage, SupabaseReceiptStorage
@@ -51,15 +52,21 @@ def get_ocr_provider(settings: Settings = Depends(get_settings)) -> OCRProvider:
     return create_ocr_provider(settings)
 
 
+def get_line_item_refiner(settings: Settings = Depends(get_settings)) -> LineItemRefiner | None:
+    return create_line_item_refiner(settings)
+
+
 def get_processing_service(
     repository: ReceiptRepository = Depends(get_repository),
     ocr_provider: OCRProvider = Depends(get_ocr_provider),
+    line_item_refiner: LineItemRefiner | None = Depends(get_line_item_refiner),
 ) -> ReceiptProcessingService:
     return ReceiptProcessingService(
         repository=repository,
         ocr_provider=ocr_provider,
         embedding_provider=MockEmbeddingProvider(),
         pipeline=ReceiptExtractionPipeline(),
+        line_item_refiner=line_item_refiner,
     )
 
 
