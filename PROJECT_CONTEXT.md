@@ -82,6 +82,7 @@ sidebar focused on spending workflows; the account control and menu use opaque
 card surfaces for reliable contrast.
 Receipt owners can delete a receipt from its document page; the processor removes
 the database record and attempts to remove the private original file.
+The repository is MIT-licensed for public hackathon submission.
 
 ## Documentation maintenance rule
 

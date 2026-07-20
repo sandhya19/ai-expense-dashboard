@@ -41,6 +41,8 @@ Official event pages:
   explanation of Qwen's role before submitting.
 - [ ] Verify the exact competition rules, deadline, eligibility, regions, and
   required Alibaba Cloud services on the official event page.
+- [x] Added a root MIT `LICENSE` file so the public repository visibly meets
+  the open-source-license submission requirement.
 
 ## Recommended demo arc
 

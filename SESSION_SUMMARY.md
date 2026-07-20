@@ -21,6 +21,7 @@
   surfaces rather than transparent header content.
 - Added owner-authorised receipt deletion from the document page, including
   removal of dependent receipt data and the private original file.
+- Added a root MIT `LICENSE` to satisfy the Devpost public-repository rule.
 - Verified TypeScript, 6 frontend tests, production build, and production npm
   audit (0 vulnerabilities).
 - No new product feature was implemented after the documentation request.

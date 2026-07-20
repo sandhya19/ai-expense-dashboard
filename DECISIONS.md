@@ -149,3 +149,13 @@
 - **Date:** 2026-07-18.
 - **Impact:** Users can remove mistaken uploads without access to other users'
   data.
+
+## Use the MIT License for the public hackathon repository
+
+- **Decision:** Add an MIT License at the repository root.
+- **Reason:** The Devpost rules require a public, open-source repository with a
+  visible license; MIT is permissive and appropriate for this demo project.
+- **Alternatives considered:** Apache-2.0; no public license.
+- **Date:** 2026-07-20.
+- **Impact:** Satisfies a mandatory submission artefact without restricting
+  evaluation or reuse of the demo code.

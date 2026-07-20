@@ -71,6 +71,7 @@ Alibaba Cloud and add live Supabase/RLS integration tests.
 - Account-menu surface: TypeScript check passed after switching the profile
   button and popover to opaque card surfaces.
 - Receipt deletion: TypeScript check, 15 processor API tests, and Ruff passed.
+- Root MIT `LICENSE` was added on 2026-07-20 for Devpost submission eligibility.
 - Build warnings remain for a raw `<img>` receipt preview and Supabase's
   Node-oriented dependency in middleware's Edge Runtime bundle; neither blocks
   the production build.

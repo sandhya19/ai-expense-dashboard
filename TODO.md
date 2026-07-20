@@ -19,6 +19,7 @@
 | Account-menu and Aldi quantity correction | Moved account actions into the top-right profile menu and fixed `2 x unit price` rows before Aldi products. | Improves navigation and prevents duplicate/misquantified items | Typecheck, 24 parser/refinement tests, and Ruff passed on 2026-07-18. |
 | Opaque account control | Styled the profile button and account menu as opaque card surfaces. | Improves account-action visibility | Typecheck passed on 2026-07-18. |
 | Receipt deletion | Added owner-authorised deletion of a receipt, its dependent data, and stored original file. | Lets users remove faulty uploads | Typecheck, 15 processor API tests, and Ruff passed on 2026-07-18. |
+| Open-source license | Added root MIT license for the Devpost public-repository requirement. | Submission eligibility | Verified root `LICENSE` exists on 2026-07-20. |
 
 ## Medium priority
 
