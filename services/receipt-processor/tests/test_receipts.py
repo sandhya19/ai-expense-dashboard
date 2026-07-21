@@ -9,10 +9,12 @@ from app.main import create_app
 from app.models.auth import AuthenticatedUser
 from app.models.dspy import LineItemOutput
 from app.models.ocr import OCRResult
-from app.models.receipts import ProcessingStatus, ReceiptRecord
+from app.models.receipts import ProcessingStatus, ReceiptCreate, ReceiptRecord
 from app.providers.embeddings import MockEmbeddingProvider
 from app.services.intelligence import build_profile
+from app.services.jobs import ReceiptProcessingWorker
 from app.services.processing import ReceiptProcessingService, line_items_match_total
+from app.services.storage import MemoryReceiptStorage
 from app.services.supabase import MemoryReceiptRepository
 
 
@@ -21,17 +23,11 @@ def test_receipt_creation(client: TestClient) -> None:
         "/v1/receipts",
         files={"file": ("receipt.png", b"png-bytes", "image/png")},
     )
-    assert response.status_code == 201
+    assert response.status_code == 202
     receipt = response.json()["receipt"]
     assert receipt["user_id"] == "user-1"
-    assert receipt["processing_status"] == "completed"
-    assert receipt["status"] == "review"
-    assert receipt["merchant"] == "Mock Merchant"
-    assert receipt["total"] == "12.00"
-    assert receipt["currency"] == "GBP"
-    assert receipt["category"] == "Other"
-    assert receipt["confidence"] > 0
-    assert receipt["ocr_provider"] == "mock"
+    assert receipt["processing_status"] == "uploaded"
+    assert receipt["merchant"] == "Processing receipt"
 
 
 def test_empty_line_items_cannot_validate_a_receipt() -> None:
@@ -157,6 +153,35 @@ async def test_receipt_processing_persists_line_items() -> None:
     ]
     assert repository.insights[receipt.id]
     assert repository.profiles[receipt.user_id]["spending_dna"]
+
+
+async def test_worker_processes_a_persisted_receipt_job() -> None:
+    repository = MemoryReceiptRepository()
+    storage = MemoryReceiptStorage()
+    processor = ReceiptProcessingService(
+        repository=repository,
+        ocr_provider=ReceiptTextOCRProvider(),
+        embedding_provider=MockEmbeddingProvider(),
+        pipeline=ReceiptExtractionPipeline(),
+    )
+    receipt = await repository.create(
+        ReceiptCreate(
+            id="queued-receipt", user_id="user-1", original_filename="receipt.png",
+            storage_path="user-1/queued-receipt.png", mime_type="image/png", file_size=1,
+        )
+    )
+    await storage.upload(receipt.storage_path, b"Shop\nItem 12.00\nTotal 12.00", "image/png")
+    await repository.enqueue_processing_job(receipt, max_attempts=3)
+
+    worker = ReceiptProcessingWorker(
+        repository, storage, processor, poll_seconds=1, lock_seconds=30
+    )
+    assert await worker.run_once()
+
+    updated = await repository.get(receipt.id)
+    assert updated is not None
+    assert updated.processing_status == ProcessingStatus.completed
+    assert repository.jobs[f"job-{receipt.id}"].status == "completed"
 
 
 async def test_receipt_processing_marks_review_when_line_items_do_not_match_total() -> None:
@@ -322,8 +347,7 @@ def test_reprocess_receipt_returns_updated_owner_receipt(client: TestClient) -> 
     assert response.status_code == 200
     receipt = response.json()["receipt"]
     assert receipt["id"] == receipt_id
-    assert receipt["processing_status"] == "completed"
-    assert receipt["ocr_provider"] == "mock"
+    assert receipt["processing_status"] == "uploaded"
 
 
 def test_receipt_ownership_check() -> None:

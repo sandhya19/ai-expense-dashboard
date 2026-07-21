@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     max_upload_bytes: int = Field(default=10 * 1024 * 1024, gt=0)
     repository_backend: Literal["memory", "supabase"] = "memory"
     storage_backend: Literal["memory", "supabase"] = "memory"
+    async_worker_enabled: bool = True
+    async_worker_poll_seconds: float = Field(default=1, gt=0, le=60)
+    async_worker_lock_seconds: int = Field(default=120, gt=0, le=3600)
+    async_worker_max_attempts: int = Field(default=3, ge=1, le=10)
 
 
 @lru_cache

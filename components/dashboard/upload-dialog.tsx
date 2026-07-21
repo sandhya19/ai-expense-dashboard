@@ -4,7 +4,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Camera, CheckCircle2, ScanLine, Sparkles, Upload, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,21 @@ export function UploadDialog({
   const [serverError, setServerError] = useState("");
   const [serverSuccess, setServerSuccess] = useState("");
   const [notice, setNotice] = useState("");
+  const [queuedReceiptId, setQueuedReceiptId] = useState<string | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    if (!queuedReceiptId) return;
+    const interval = window.setInterval(() => router.refresh(), 2000);
+    const timeout = window.setTimeout(() => {
+      window.clearInterval(interval);
+      setQueuedReceiptId(null);
+    }, 30000);
+    return () => {
+      window.clearInterval(interval);
+      window.clearTimeout(timeout);
+    };
+  }, [queuedReceiptId, router]);
 
   const {
     register,
@@ -48,6 +62,7 @@ export function UploadDialog({
       setServerError("");
       setServerSuccess("");
       setNotice("");
+      setQueuedReceiptId(null);
       reset();
     }
   }
@@ -76,16 +91,10 @@ export function UploadDialog({
       return;
     }
 
-    const receipt = body.receipt as {
-      merchant?: string;
-      total?: string | number;
-      currency?: string;
-      category?: string;
-      confidence?: number;
-      ai_summary?: string | null;
-    } | undefined;
-    setServerSuccess(receipt?.merchant ? `${receipt.merchant} scanned successfully.` : "Receipt scanned successfully.");
-    setNotice(receipt?.ai_summary ?? (receipt?.confidence ? `AI extracted ${receipt.category ?? "your purchase"} with ${receipt.confidence}% confidence.` : "Your receipt is now part of your spending story."));
+    const receiptId = typeof body.receipt?.id === "string" ? body.receipt.id : null;
+    setServerSuccess("Receipt queued for analysis.");
+    setNotice("You can keep using ReceiptBrain while AI reads it. The timeline will update when it is ready.");
+    setQueuedReceiptId(receiptId);
     reset();
     router.refresh();
   }

@@ -14,7 +14,7 @@ async def health(settings: Settings = Depends(get_settings)) -> HealthResponse:
     return HealthResponse(version=settings.app_version)
 
 
-@router.post("/v1/receipts", response_model=ReceiptResponse, status_code=201)
+@router.post("/v1/receipts", response_model=ReceiptResponse, status_code=status.HTTP_202_ACCEPTED)
 async def create_receipt(
     file: UploadFile = File(...),
     user: AuthenticatedUser = Depends(get_current_user),

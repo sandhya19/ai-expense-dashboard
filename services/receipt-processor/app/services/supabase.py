@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Protocol
 
@@ -6,7 +6,13 @@ import httpx
 from fastapi.encoders import jsonable_encoder
 
 from app.core.config import Settings
-from app.models.receipts import ProcessingStatus, ReceiptCreate, ReceiptItemCreate, ReceiptRecord
+from app.models.receipts import (
+    ProcessingStatus,
+    ReceiptCreate,
+    ReceiptItemCreate,
+    ReceiptProcessingJob,
+    ReceiptRecord,
+)
 from app.services.intelligence import (
     InsightPayload,
     PatternPayload,
@@ -38,6 +44,18 @@ class ReceiptRepository(Protocol):
     async def persist_intelligence(self, receipt: ReceiptRecord) -> None:
         """Persist derived insights without affecting receipt processing success."""
 
+    async def enqueue_processing_job(self, receipt: ReceiptRecord, max_attempts: int) -> None:
+        """Queue durable processing work for a receipt."""
+
+    async def claim_processing_job(self, lock_seconds: int) -> ReceiptProcessingJob | None:
+        """Atomically claim the next ready processing job."""
+
+    async def complete_processing_job(self, job_id: str) -> None:
+        """Mark a processing job complete."""
+
+    async def retry_processing_job(self, job: ReceiptProcessingJob, error: str) -> None:
+        """Schedule a failed job for retry or mark it exhausted."""
+
 
 class MemoryReceiptRepository:
     """In-memory repository for tests and local development."""
@@ -48,6 +66,7 @@ class MemoryReceiptRepository:
         self.insights: dict[str, list[InsightPayload]] = {}
         self.profiles: dict[str, dict[str, object]] = {}
         self.patterns: dict[str, list[PatternPayload]] = {}
+        self.jobs: dict[str, ReceiptProcessingJob] = {}
 
     async def create(self, payload: ReceiptCreate) -> ReceiptRecord:
         now = datetime.now(UTC)
@@ -96,6 +115,44 @@ class MemoryReceiptRepository:
         self.profiles[receipt.user_id] = build_profile(history)
         self.patterns[receipt.user_id] = build_recurring_patterns(history)
 
+    async def enqueue_processing_job(self, receipt: ReceiptRecord, max_attempts: int) -> None:
+        now = datetime.now(UTC)
+        job = ReceiptProcessingJob(
+            id=f"job-{receipt.id}", receipt_id=receipt.id, user_id=receipt.user_id,
+            status="queued", max_attempts=max_attempts, run_after=now,
+            created_at=now, updated_at=now,
+        )
+        self.jobs[job.id] = job
+
+    async def claim_processing_job(self, lock_seconds: int) -> ReceiptProcessingJob | None:
+        now = datetime.now(UTC)
+        ready = sorted(
+            (job for job in self.jobs.values() if job.status == "queued" and job.run_after <= now),
+            key=lambda job: job.created_at,
+        )
+        if not ready:
+            return None
+        job = ready[0].model_copy(update={
+            "status": "processing", "attempt_count": ready[0].attempt_count + 1,
+            "locked_at": now, "locked_until": now, "updated_at": now,
+        })
+        self.jobs[job.id] = job
+        return job
+
+    async def complete_processing_job(self, job_id: str) -> None:
+        job = self.jobs[job_id]
+        self.jobs[job_id] = job.model_copy(
+            update={"status": "completed", "updated_at": datetime.now(UTC)}
+        )
+
+    async def retry_processing_job(self, job: ReceiptProcessingJob, error: str) -> None:
+        now = datetime.now(UTC)
+        exhausted = job.attempt_count >= job.max_attempts
+        self.jobs[job.id] = job.model_copy(update={
+            "status": "failed" if exhausted else "queued", "last_error": error,
+            "run_after": now, "locked_at": None, "locked_until": None, "updated_at": now,
+        })
+
 
 class SupabaseReceiptRepository:
     """Supabase PostgREST repository using a service-role key."""
@@ -119,6 +176,10 @@ class SupabaseReceiptRepository:
     @property
     def _items_url(self) -> str:
         return f"{self.settings.supabase_url}/rest/v1/{self.settings.supabase_receipt_items_table}"
+
+    @property
+    def _jobs_url(self) -> str:
+        return self._table_url("receipt_processing_jobs")
 
     def _table_url(self, table: str) -> str:
         return f"{self.settings.supabase_url}/rest/v1/{table}"
@@ -265,3 +326,53 @@ class SupabaseReceiptRepository:
                     ]),
                 )
                 pattern_response.raise_for_status()
+
+    async def enqueue_processing_job(self, receipt: ReceiptRecord, max_attempts: int) -> None:
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.post(
+                f"{self._jobs_url}?on_conflict=receipt_id",
+                headers={
+                    **self._headers,
+                    "Prefer": "return=representation,resolution=merge-duplicates",
+                },
+                json=jsonable_encoder({
+                    "receipt_id": receipt.id, "user_id": receipt.user_id,
+                    "status": "queued", "attempt_count": 0, "max_attempts": max_attempts,
+                    "run_after": datetime.now(UTC).isoformat(), "locked_at": None,
+                    "locked_until": None, "last_error": None,
+                }),
+            )
+            response.raise_for_status()
+
+    async def claim_processing_job(self, lock_seconds: int) -> ReceiptProcessingJob | None:
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.post(
+                f"{self.settings.supabase_url}/rest/v1/rpc/claim_receipt_processing_job",
+                headers=self._headers,
+                json={"lock_seconds": lock_seconds},
+            )
+            response.raise_for_status()
+            data = response.json()
+            return ReceiptProcessingJob.model_validate(data[0]) if data else None
+
+    async def complete_processing_job(self, job_id: str) -> None:
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.patch(
+                f"{self._jobs_url}?id=eq.{job_id}", headers=self._headers,
+                json={"status": "completed", "locked_at": None, "locked_until": None},
+            )
+            response.raise_for_status()
+
+    async def retry_processing_job(self, job: ReceiptProcessingJob, error: str) -> None:
+        exhausted = job.attempt_count >= job.max_attempts
+        seconds = min(60 * (2 ** max(job.attempt_count - 1, 0)), 900)
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.patch(
+                f"{self._jobs_url}?id=eq.{job.id}", headers=self._headers,
+                json={
+                    "status": "failed" if exhausted else "queued", "last_error": error[:1000],
+                    "locked_at": None, "locked_until": None,
+                    "run_after": (datetime.now(UTC) + timedelta(seconds=seconds)).isoformat(),
+                },
+            )
+            response.raise_for_status()

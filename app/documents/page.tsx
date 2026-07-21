@@ -14,6 +14,7 @@ type DocumentsPageProps = {
     dateTo?: string;
     minAmount?: string;
     maxAmount?: string;
+    demo?: string;
   }>;
 };
 
@@ -54,17 +55,18 @@ export default async function DocumentsPage({
   searchParams,
 }: DocumentsPageProps) {
   const [receipts, filters] = await Promise.all([
-    getReceiptList(),
+    getReceiptList((await searchParams).demo === "1"),
     searchParams,
   ]);
   const filteredReceipts = filterReceipts(receipts, filters);
+  const demoMode = filters.demo === "1";
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Documents</h1>
         <p className="mt-1 text-muted-foreground">
-          Review uploaded receipts, extraction status, and corrected fields.
+          {demoMode ? "Explore fictional sample receipts and the evidence behind each insight." : "Review uploaded receipts, extraction status, and corrected fields."}
         </p>
       </div>
 
@@ -75,6 +77,7 @@ export default async function DocumentsPage({
 
         <CardContent>
           <form className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+            {demoMode && <input type="hidden" name="demo" value="1" />}
             <input
               name="merchant"
               defaultValue={filters.merchant ?? ""}
@@ -124,7 +127,7 @@ export default async function DocumentsPage({
                 variant="outline"
                 asChild
               >
-                <Link href="/documents">Clear</Link>
+                <Link href={demoMode ? "/documents?demo=1" : "/documents"}>Clear</Link>
               </Button>
             </div>
           </form>
@@ -200,7 +203,7 @@ export default async function DocumentsPage({
                         </td>
                         <td>
                           <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium capitalize">
-                            {receipt.processing_status ?? "unknown"}
+                            {receipt.processing_status === "uploaded" ? "queued" : receipt.processing_status ?? "unknown"}
                           </span>
                         </td>
                         <td>
@@ -219,7 +222,7 @@ export default async function DocumentsPage({
                             size="sm"
                             asChild
                           >
-                            <Link href={`/documents/${receipt.id}`}>
+                            <Link href={`/documents/${receipt.id}${demoMode ? "?demo=1" : ""}`}>
                               <Eye className="size-4" />
                               Review
                             </Link>

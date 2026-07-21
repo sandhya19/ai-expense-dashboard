@@ -76,4 +76,10 @@ def get_receipt_service(
     processor: ReceiptProcessingService = Depends(get_processing_service),
     settings: Settings = Depends(get_settings),
 ) -> ReceiptService:
-    return ReceiptService(repository, storage, processor, settings.max_upload_bytes)
+    return ReceiptService(
+        repository,
+        storage,
+        processor,
+        settings.max_upload_bytes,
+        settings.async_worker_max_attempts,
+    )

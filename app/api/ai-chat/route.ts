@@ -21,7 +21,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const receipts = await getReceiptReasoningRecords();
+  const demoMode = new URL(request.url).searchParams.get("demo") === "1";
+  const receipts = await getReceiptReasoningRecords(25, demoMode);
   const fallback = answerReceiptQuestion(parsed.data.question, receipts);
 
   if (!isQwenReasoningConfigured()) {

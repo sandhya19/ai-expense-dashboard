@@ -58,7 +58,17 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/settings") ||
     pathname.startsWith("/ai-chat");
 
-  if (!user && isProtectedRoute) {
+  const isPublicDemoRoute =
+    request.nextUrl.searchParams.get("demo") === "1" &&
+    [
+      "/dashboard",
+      "/documents",
+      "/spending-story",
+      "/spending-dna",
+      "/ai-chat",
+    ].some((route) => pathname === route || pathname.startsWith(`${route}/`));
+
+  if (!user && isProtectedRoute && !isPublicDemoRoute) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/auth/login";
     loginUrl.searchParams.set("next", pathname);

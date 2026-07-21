@@ -6,6 +6,29 @@
 
 ## Today’s work
 
+- Completed OpenAI Build Week Milestone 1: surfaced the GPT-5.6 Financial
+  Action on the dashboard, retained JSON-schema and receipt-citation checks,
+  and added a transparent deterministic fallback for model/configuration
+  failures.
+- Added a focused fallback-plan test; TypeScript, 9 Vitest tests, and the
+  production build passed. The build continues to warn about the receipt
+  preview's raw `<img>`.
+- Completed OpenAI Build Week Milestone 2: added public Demo Mode at
+  `/dashboard?demo=1` with original fictional receipts and insight/action-plan
+  evidence. Demo data has regression coverage for required categories and
+  receipt citations.
+- Completed judge-flow continuity pass: Demo Mode now propagates through Story,
+  DNA, AI Chat, receipt history/detail, and Financial Action evidence. Renamed
+  the visible action to generic AI wording until its actual source is known.
+  TypeScript, 11 Vitest tests, and production build passed.
+- Fixed the Demo Mode sign-in redirect by allowing only the explicit demo query
+  routes through middleware without a user session. TypeScript and 11 Vitest
+  tests passed after the change.
+- Removed the overlapping Financial Action feature from the UI, routes, API,
+  helpers, and tests. ReceiptBrain now focuses its intelligence narrative on
+  verified receipts, Memory, Story, DNA, and cited Qwen/local chat. TypeScript,
+  7 Vitest tests, and production build passed after removal.
+
 - Completed and validated Increment 3 work in the active worktree: Spending DNA
   history page, private shareable Spending Story, and spending-rhythm insight.
 - Created the root project-memory documentation requested for future sessions.
@@ -47,17 +70,15 @@ and increment/hackathon documentation. Refer to `git status --short` and
 
 ## Current milestone
 
-Increment 3 — Guided discovery and monthly stories. Three items are implemented;
-achievements UI and insight archive remain.
-
-The next operational milestone is committing and deploying the uncommitted Qwen
-OCR and public/private experience changes to Alibaba Cloud ECS.
+OpenAI Build Week Milestone 3 — Submission evidence. The GPT-5.6 extension and
+Demo Mode are implemented; deployment/test access, submission provenance, and
+the public narrated video remain.
 
 ## Next milestone
 
-Implement the insight archive with dismiss/feedback, then premium achievements
-UI. After that, prioritise Alibaba Cloud deployment and Supabase integration/RLS
-tests for the hackathon submission.
+Prepare public deployment/test access, README provenance, Codex Session ID, and
+the under-three-minute video. Then run final accessibility and live reliability
+checks.
 
 ## Suggested first prompt for next Codex session
 
@@ -70,3 +91,22 @@ tests for the hackathon submission.
 
 At every future session close, update `PROJECT_CONTEXT.md`, `TODO.md`,
 `HANDOFF.md`, `DECISIONS.md`, and this file.
+
+## Priority update — 2026-07-21
+
+Financial Action was removed after product review: it duplicated the value of
+Memory, Story, DNA, and cited chat without persisting a user decision or taking
+an action. Durable asynchronous receipt processing is now the active milestone.
+Implement persisted jobs, worker claiming, retry/backoff, and visible progress
+before returning to submission-polish work.
+
+## Async processing completed — 2026-07-21
+
+Implemented durable asynchronous receipt processing in the existing FastAPI
+receipt-processor. Upload now returns `202 Accepted` after saving a receipt and
+Supabase job; the service worker claims work atomically, downloads the stored
+file, invokes the existing OCR/Qwen pipeline, and retries failures with
+backoff. The upload dialog explains the queued state and refreshes the timeline
+briefly while work completes. Backend verification: 53 pytest tests, Ruff, and
+mypy passed; frontend TypeScript passed. Apply
+`20260721190000_async_receipt_processing.sql` before deployment.

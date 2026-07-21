@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { mockDashboardData } from "@/lib/mock-data";
+import { demoReceipts } from "@/lib/demo-data";
 import type { ReceiptStatus } from "@/lib/types";
 
 const configured = Boolean(
@@ -83,7 +84,8 @@ const detailSelect = `
   error_message
 `;
 
-export async function getReceiptList(): Promise<ReceiptListItem[]> {
+export async function getReceiptList(demoMode = false): Promise<ReceiptListItem[]> {
+  if (demoMode) return demoReceipts;
   if (!configured) {
     return mockDashboardData.recent.map((receipt) => ({
       ...receipt,
@@ -110,8 +112,27 @@ export async function getReceiptList(): Promise<ReceiptListItem[]> {
 }
 
 export async function getReceiptDetail(
-  id: string
+  id: string,
+  demoMode = false
 ): Promise<ReceiptDetail | null> {
+  if (demoMode) {
+    const receipt = demoReceipts.find((item) => item.id === id);
+    if (!receipt) return null;
+    return {
+      ...receipt,
+      storage_path: null,
+      mime_type: null,
+      file_size: null,
+      raw_ocr_text: `${receipt.merchant}\n${receipt.receipt_date}\nTOTAL ${Number(receipt.total).toFixed(2)}`,
+      merchant_name: receipt.merchant,
+      transaction_date: receipt.receipt_date,
+      subtotal: receipt.total,
+      tax: 0,
+      ai_summary: `A verified ${receipt.category.toLowerCase()} receipt included in Demo Mode.`,
+      ocr_provider: "demo fixture",
+      error_message: null,
+    };
+  }
   if (!configured) {
     const receipt = mockDashboardData.recent.find((item) => item.id === id);
 
@@ -174,8 +195,10 @@ export async function getReceiptDetail(
 }
 
 export async function getReceiptReasoningRecords(
-  limit = 25
+  limit = 25,
+  demoMode = false
 ): Promise<ReceiptReasoningRecord[]> {
+  if (demoMode) return demoReceipts.slice(0, limit);
   const receipts = (await getReceiptList()).slice(0, limit);
 
   if (!configured || receipts.length === 0) {

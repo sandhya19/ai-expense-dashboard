@@ -86,6 +86,23 @@ class ReceiptResponse(BaseModel):
     receipt: ReceiptRecord
 
 
+class ReceiptProcessingJob(BaseModel):
+    """A durable unit of background receipt processing work."""
+
+    id: str
+    receipt_id: str
+    user_id: str
+    status: str
+    attempt_count: int = 0
+    max_attempts: int = 3
+    run_after: datetime
+    locked_at: datetime | None = None
+    locked_until: datetime | None = None
+    last_error: str | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
 class HealthResponse(BaseModel):
     """Health check response."""
 

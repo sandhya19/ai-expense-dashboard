@@ -10,12 +10,13 @@ const impactStyles = {
   high: "bg-amber-500/10 text-amber-800 dark:text-amber-300",
 };
 
-export function SpendingStory({ story, dna }: { story: SpendingStory; dna: SpendingDnaTrait[] }) {
+export function SpendingStory({ story, dna, demoMode = false }: { story: SpendingStory; dna: SpendingDnaTrait[]; demoMode?: boolean }) {
   const isUp = (story.changePercent ?? 0) >= 0;
+  const demoQuery = demoMode ? "?demo=1" : "";
 
   return (
     <section className="grid gap-4 xl:grid-cols-12">
-      <Link href="/spending-story" className="group xl:col-span-7">
+      <Link href={`/spending-story${demoQuery}`} className="group xl:col-span-7">
       <Card className="h-full overflow-hidden border-0 bg-gradient-to-br from-slate-950 via-indigo-950 to-violet-900 text-white shadow-xl transition-transform group-hover:-translate-y-0.5">
         <CardContent className="relative p-6 sm:p-8">
           <div className="absolute -right-16 -top-20 size-64 rounded-full bg-fuchsia-400/20 blur-3xl" />
@@ -30,7 +31,7 @@ export function SpendingStory({ story, dna }: { story: SpendingStory; dna: Spend
       </Card>
       </Link>
 
-      <Link href="/spending-dna" className="group xl:col-span-5">
+      <Link href={`/spending-dna${demoQuery}`} className="group xl:col-span-5">
       <Card className="h-full transition-all group-hover:-translate-y-0.5 group-hover:shadow-md">
         <CardContent className="p-6">
           <div className="flex items-center justify-between gap-2"><div className="flex items-center gap-2"><BrainCircuit className="size-5 text-primary" /><div><h2 className="font-semibold">Your Spending DNA</h2><p className="text-sm text-muted-foreground">A profile that grows with your receipts.</p></div></div><ArrowUpRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" /></div>

@@ -20,8 +20,10 @@ type ChatSource = "fallback" | "qwen";
 
 export function ReceiptChat({
   receipts,
+  demoMode = false,
 }: {
   receipts: ReceiptListItem[];
+  demoMode?: boolean;
 }) {
   const [question, setQuestion] = useState(suggestions[0]);
   const [submittedQuestion, setSubmittedQuestion] = useState(suggestions[0]);
@@ -44,7 +46,7 @@ export function ReceiptChat({
     setSource("fallback");
 
     startTransition(async () => {
-      const response = await fetch("/api/ai-chat", {
+      const response = await fetch(`/api/ai-chat${demoMode ? "?demo=1" : ""}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -153,7 +155,7 @@ export function ReceiptChat({
               {result.citations.map((citation) => (
                 <Link
                   key={`${citation.id}-${citation.detail}`}
-                  href={`/documents/${citation.id}`}
+                  href={`/documents/${citation.id}${demoMode ? "?demo=1" : ""}`}
                   className="rounded-lg border p-3 text-sm hover:bg-muted"
                 >
                   <span className="font-medium">{citation.label}</span>

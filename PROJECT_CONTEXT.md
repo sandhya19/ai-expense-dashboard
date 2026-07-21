@@ -15,7 +15,7 @@ companion, not an accounting-style expense tracker.
 ## Product goals
 
 **Short term:** trustworthy parsing and reconciliation, explainable Spending
-Story/DNA/timeline experiences, and a Qwen Cloud demo.
+Story/DNA/timeline experiences, and a judge-safe OpenAI Build Week demo.
 
 **Long term:** insight history, premium achievements, cited conversational
 finance, asynchronous processing, observability, and production hardening.
@@ -35,12 +35,21 @@ finance, asynchronous processing, observability, and production hardening.
   Spending DNA, streak, and Smart Shopper profile data.
 - Dashboard story, insights, DNA preview/timeline, shareable Spending Story,
   DNA history, day-of-week rhythm insight, and Qwen/fallback receipt chat.
+- A public, explicit Demo Mode at `/dashboard?demo=1` with fictional,
+  non-branded grocery, dining, travel, subscription, and coffee receipts.
+  The demo scope continues through Story, DNA, receipt history/detail, AI chat,
+  and cited chat so a judge never falls into unrelated mock data.
+  Middleware permits these explicit `?demo=1` routes without sign-in while
+  retaining authentication for every non-demo personal-data route.
 - Vitest frontend tests; pytest, Ruff, and mypy backend checks.
+- Receipt uploads now return promptly with a durable queued job. The FastAPI
+  receipt-processor worker claims the Supabase-backed work, processes OCR/Qwen,
+  persists results, and retries failures with backoff.
 
 ## Planned features
 
-The next Increment 3 items are an insight archive with dismiss/feedback and a
-premium achievements UI. See `TODO.md` and `docs/product-increments.md`.
+The next product priorities are public submission evidence, an insight archive,
+and premium achievements. See `TODO.md`.
 
 ## Technology stack
 
@@ -74,9 +83,9 @@ For Qwen's dedicated `qwen-vl-ocr` models, the FastAPI processor uses
 DashScope's native `text_recognition` task so receipt parsing receives plain
 text rather than layout coordinates.
 
-The public home page describes ReceiptBrain without exposing any personal
-screens. Authenticated users are sent to `/dashboard`, where uploads, receipt
-history, DNA, Story, AI chat, and profile settings are available.
+The public home page describes ReceiptBrain and includes a Demo Mode entry.
+Authenticated users are sent to `/dashboard`, where uploads, receipt history,
+DNA, Story, AI chat, and profile settings are available.
 Settings and sign-out are grouped in the top-right profile menu, keeping the
 sidebar focused on spending workflows; the account control and menu use opaque
 card surfaces for reliable contrast.

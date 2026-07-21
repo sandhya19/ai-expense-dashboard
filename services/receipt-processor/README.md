@@ -36,6 +36,16 @@ For Supabase-backed uploads, configure `.env` with `SUPABASE_URL`,
 verifies forwarded user access tokens through Supabase Auth `/auth/v1/user`;
 do not store user JWTs in `.env`.
 
+Receipt processing is asynchronous by default. Uploads return `202 Accepted`
+after the original file, receipt record, and durable job are stored. The same
+FastAPI service runs a worker loop that atomically claims jobs from Supabase,
+performs OCR/parsing, and retries provider failures with backoff. Apply
+`supabase/migrations/20260721190000_async_receipt_processing.sql` before
+enabling Supabase processing. Configure `ASYNC_WORKER_ENABLED=true`,
+`ASYNC_WORKER_POLL_SECONDS=1`, and optionally `ASYNC_WORKER_MAX_ATTEMPTS=3`.
+Run one worker-enabled service replica unless the Supabase migration is applied;
+the migration's claim function safely supports multiple replicas.
+
 ## API
 
 Health:

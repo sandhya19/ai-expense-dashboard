@@ -79,6 +79,58 @@ npm run dev
 
 Open `http://localhost:3000`.
 
+## OpenAI Build Week: judge setup and Codex collaboration
+
+ReceiptBrain fits the **Apps for Your Life** category. The project existed
+before Build Week as a Qwen-powered receipt intelligence product. The Build
+Week extension adds a public, judge-safe Demo Mode and durable asynchronous
+receipt processing; see [`docs/openai-build-week.md`](docs/openai-build-week.md)
+for the dated boundary between existing work and the extension.
+
+Codex was used throughout the project to explore the product flow, implement
+the full-stack changes, review trade-offs, write and update tests, and refine
+the submission experience. The Build Week work used the Codex/GPT-5.6 workflow
+to deliver the Demo Mode and persisted FastAPI job worker. Qwen remains the
+runtime provider for receipt OCR and grounded receipt chat; ReceiptBrain does
+not present Qwen output as OpenAI model output.
+
+### Judge demo
+
+- Public demo: `http://localhost:3000/dashboard?demo=1` after local startup,
+  or the deployed equivalent.
+- Demo Mode contains fictional, non-branded grocery, dining, travel,
+  subscription, and coffee receipts. It needs no account, upload, or API key.
+- Follow the public demo through Spending Story, Spending DNA, receipt history,
+  receipt detail, and cited AI Chat.
+
+### Live upload setup
+
+Run the web app and processor in separate terminals:
+
+```bash
+# Terminal 1, repository root
+npm install
+npm run dev
+
+# Terminal 2
+cd services/receipt-processor
+python -m uvicorn app.main:app --reload --port 8001
+```
+
+Set `RECEIPT_SERVICE_URL=http://127.0.0.1:8001` in `.env.local`. For a real
+Supabase/Qwen upload, configure the server-only variables described below and
+apply `supabase/migrations/20260721190000_async_receipt_processing.sql` before
+starting the processor. Upload returns promptly with a queued state; the
+FastAPI worker performs OCR/parsing and the UI refreshes as the result arrives.
+
+### Submission evidence
+
+- Source: <https://github.com/sandhya19/ai-expense-dashboard> (public, MIT).
+- Tests: `npm run typecheck`, `npm test`, and, in `services/receipt-processor`,
+  `python -m pytest`, `python -m ruff check .`, and `python -m mypy app tests`.
+- Record the Codex `/feedback` Session ID from the main Build Week project
+  thread in the Devpost submission.
+
 Receipt uploads are proxied through the Next.js API to the FastAPI receipt
 processor. Set `RECEIPT_SERVICE_URL` in `.env.local`, for example
 `http://127.0.0.1:8001`, and run `services/receipt-processor` locally before
@@ -96,9 +148,11 @@ QWEN_REASONING_MODEL=qwen-plus
 
 1. Create a Supabase project.
 2. Run `supabase/schema.sql` in the SQL editor.
-3. Copy `.env.example` to `.env.local`.
-4. Add the project URL and publishable key.
-5. Configure the receipt processor service with Supabase and Qwen Cloud
+3. Run `supabase/migrations/20260721190000_async_receipt_processing.sql` in
+   the SQL editor for durable asynchronous receipt processing.
+4. Copy `.env.example` to `.env.local`.
+5. Add the project URL and publishable key.
+6. Configure the receipt processor service with Supabase and Qwen Cloud
    credentials.
 
 Without Supabase environment variables, the dashboard uses demo data.

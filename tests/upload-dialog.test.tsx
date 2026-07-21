@@ -17,17 +17,14 @@ describe("UploadDialog", () => {
         ok: true,
         json: async () => ({
           receipt: {
-            merchant: "Aldi",
-            category: "Groceries",
-            confidence: 98,
-            ai_summary: "This shop is below your usual weekly grocery spend.",
+            id: "receipt-1",
           },
         }),
       })
     );
   });
 
-  it("shows scan success and the AI notice after a receipt is uploaded", async () => {
+  it("confirms that receipt analysis is queued after upload", async () => {
     render(<UploadDialog />);
     fireEvent.click(screen.getByRole("button", { name: "Upload Receipt" }));
 
@@ -36,9 +33,9 @@ describe("UploadDialog", () => {
     fireEvent.change(input!, { target: { files: [new File(["receipt"], "receipt.png", { type: "image/png" })] } });
     fireEvent.click(screen.getByRole("button", { name: "Start AI processing" }));
 
-    expect(await screen.findByText("Aldi scanned successfully.")).toBeInTheDocument();
+    expect(await screen.findByText("Receipt queued for analysis.")).toBeInTheDocument();
     expect(screen.getByText("What I noticed")).toBeInTheDocument();
-    expect(screen.getByText("This shop is below your usual weekly grocery spend.")).toBeInTheDocument();
+    expect(screen.getByText(/You can keep using ReceiptBrain while AI reads it/)).toBeInTheDocument();
     await waitFor(() => expect(refresh).toHaveBeenCalledOnce());
   });
 });

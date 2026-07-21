@@ -14,6 +14,7 @@ def local_backends(monkeypatch: pytest.MonkeyPatch) -> Generator[None, None, Non
     monkeypatch.setenv("OCR_PROVIDER", "mock")
     monkeypatch.setenv("REPOSITORY_BACKEND", "memory")
     monkeypatch.setenv("STORAGE_BACKEND", "memory")
+    monkeypatch.setenv("ASYNC_WORKER_ENABLED", "false")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()

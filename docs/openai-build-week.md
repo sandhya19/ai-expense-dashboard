@@ -25,16 +25,15 @@ OpenAI Build Week:
   insight experiences.
 - Next.js, FastAPI, Supabase, and Alibaba Cloud ECS infrastructure.
 
-## Planned Build Week extension
+## Build Week extension
 
-The new feature is **Weekly Financial Action Plan**. It will use GPT-5.6 to
-turn a selected, user-owned receipt history into one practical weekly spending
-action. The generated plan will include structured evidence references so the
-interface can show which receipt data supports it.
-
-The extension will preserve ReceiptBrain's trust boundary: the server will
-send only scoped receipt context, validate the model response against a schema,
-and reject evidence references that do not belong to the supplied context.
+The new Build Week extension is a **judge-safe Demo Mode** and durable
+asynchronous processing. Demo Mode provides a
+complete ReceiptBrain journey using original fictional receipt data rather than
+personal or third-party branded material, and preserves the product's cited
+Qwen/local chat and explainable Story/DNA experiences. The processing extension
+stores a receipt job in Supabase, returns upload success promptly, and lets the
+existing FastAPI receipt-processor claim, retry, and persist OCR work.
 
 ## Evidence to collect before submission
 
@@ -51,5 +50,11 @@ and reject evidence references that do not belong to the supplied context.
 
 ## Status
 
-Baseline and scope declaration complete. The GPT-5.6 extension, validation,
-tests, documentation, video, and submission evidence remain to be completed.
+Demo Mode is available at `/dashboard?demo=1`. It contains original fictional
+receipts across grocery, dining, travel, subscriptions, and coffee; those
+fixtures power the Story, AI Chat, receipt history, and receipt details.
+
+The README now includes local setup, Demo Mode, migration, test, source, and
+Codex-collaboration evidence. Remaining: deploy a public test instance (or
+provide a test account), record the `/feedback` Session ID, and upload the
+public narrated video under three minutes.

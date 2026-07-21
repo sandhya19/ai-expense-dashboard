@@ -6,7 +6,7 @@ from uuid import uuid4
 from fastapi import HTTPException, UploadFile, status
 
 from app.models.auth import AuthenticatedUser
-from app.models.receipts import FileValidationResult, ReceiptCreate, ReceiptRecord
+from app.models.receipts import FileValidationResult, ProcessingStatus, ReceiptCreate, ReceiptRecord
 from app.services.processing import ReceiptProcessingService
 from app.services.storage import ReceiptStorage
 from app.services.supabase import ReceiptRepository
@@ -29,11 +29,13 @@ class ReceiptService:
         storage: ReceiptStorage,
         processor: ReceiptProcessingService,
         max_upload_bytes: int,
+        max_job_attempts: int,
     ) -> None:
         self.repository = repository
         self.storage = storage
         self.processor = processor
         self.max_upload_bytes = max_upload_bytes
+        self.max_job_attempts = max_job_attempts
 
     async def create_from_upload(self, user: AuthenticatedUser, file: UploadFile) -> ReceiptRecord:
         validated = await self._validate_upload(file)
@@ -52,7 +54,8 @@ class ReceiptService:
                 file_size=validated.size,
             )
         )
-        return await self.processor.process(receipt, validated.content)
+        await self.repository.enqueue_processing_job(receipt, max_attempts=self.max_job_attempts)
+        return receipt
 
     async def get_for_user(self, receipt_id: str, user: AuthenticatedUser) -> ReceiptRecord:
         receipt = await self.repository.get(receipt_id)
@@ -67,14 +70,19 @@ class ReceiptService:
 
     async def reprocess_for_user(self, receipt_id: str, user: AuthenticatedUser) -> ReceiptRecord:
         receipt = await self.get_for_user(receipt_id, user)
-        try:
-            content = await self.storage.download(receipt.storage_path)
-        except Exception as exc:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Receipt file could not be loaded",
-            ) from exc
-        return await self.processor.process(receipt, content)
+        await self.repository.update(
+            receipt.id,
+            {
+                "processing_status": ProcessingStatus.uploaded,
+                "status": "processing",
+                "error_message": None,
+            },
+        )
+        queued = await self.repository.get(receipt.id)
+        if queued is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Receipt not found")
+        await self.repository.enqueue_processing_job(queued, max_attempts=self.max_job_attempts)
+        return queued
 
     async def delete_for_user(self, receipt_id: str, user: AuthenticatedUser) -> None:
         receipt = await self.get_for_user(receipt_id, user)

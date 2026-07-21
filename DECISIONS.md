@@ -159,3 +159,71 @@
 - **Date:** 2026-07-20.
 - **Impact:** Satisfies a mandatory submission artefact without restricting
   evaluation or reuse of the demo code.
+
+## Make GPT-5.6 financial actions dashboard-visible with a transparent fallback
+
+- **Decision:** Present the GPT-5.6 Financial Action on the dashboard and keep
+  its strict schema/citation validation. When GPT-5.6 is unavailable or returns
+  unverifiable evidence, return a deterministic local plan with the same cited
+  receipt contract and label it as local reasoning.
+- **Reason:** OpenAI Build Week requires visible, non-trivial GPT-5.6 use, but
+  a judge demo must remain usable during configuration or provider failures.
+- **Alternatives considered:** Fail the action entirely; present local output
+  as model output; make the action an isolated secondary page.
+- **Date:** 2026-07-21.
+- **Impact:** GPT-5.6 is a core product moment while financial claims remain
+  inspectable and the fallback never misrepresents its source.
+- **Future considerations:** Demo Mode must use original, non-branded sample
+  receipts and test the GPT-5.6 route under configured and unavailable states.
+
+## Keep hackathon Demo Mode public, fictional, and query-scoped
+
+- **Decision:** Expose Demo Mode through `/dashboard?demo=1` and pass that
+  explicit scope through the dashboard, action-plan API, history, and receipt
+  detail screens. Use only original fictional merchants and fixture data.
+- **Reason:** Judges need a complete, reliable product journey without accounts,
+  credentials, real financial data, or third-party receipt brands in the demo.
+- **Alternatives considered:** Implicit mock mode based on missing environment
+  variables; real data seeded into Supabase; branded receipt fixtures.
+- **Date:** 2026-07-21.
+- **Impact:** Demo behaviour is intentional and transparent rather than hiding
+  a missing setup, while evidence links remain inspectable.
+
+## Preserve Demo Mode context and only name the active AI source
+
+- **Decision:** Propagate `demo=1` through every judge-facing route and label
+  the Financial Action generically until a returned response can truthfully
+  identify GPT-5.6; local results remain explicitly labelled.
+- **Reason:** A public demo must not silently switch to unrelated fixtures or
+  imply paid API runtime that is not configured.
+- **Date:** 2026-07-21.
+- **Impact:** The demonstration remains coherent and transparent while Qwen can
+  still be used as the live OCR/chat provider when credentials are available.
+
+## Remove Financial Action and prioritise durable receipt processing
+
+- **Decision:** Remove the overlapping Financial Action surface and move
+  durable asynchronous receipt processing to the top product-engineering
+  priority.
+- **Reason:** Memory, Story, DNA, and cited chat already explain habits and
+  patterns. A plan that neither persists nor takes action added confusion,
+  while synchronous OCR directly harms upload reliability and demo flow.
+- **Date:** 2026-07-21.
+- **Impact:** The product narrative is clearer; the next implementation must
+  use persisted jobs and a worker/retry model rather than in-process tasks.
+
+## Keep async receipt work inside the FastAPI receipt-processor
+
+- **Decision:** The existing FastAPI service is both the receipt API and the
+  durable worker. Uploads persist a Supabase job and return `202`; its managed
+  worker loop atomically claims jobs, runs the existing OCR/Qwen pipeline, and
+  persists results or retry state.
+- **Reason:** OCR, Qwen credentials, private receipt storage, parsing, and
+  service-role persistence already belong to this service. A separate AI
+  service would add deployment complexity without strengthening the product.
+- **Alternatives considered:** synchronous upload processing; FastAPI
+  `BackgroundTasks`; a new queue provider/service.
+- **Date:** 2026-07-21.
+- **Impact:** Jobs survive request completion and can be recovered after a
+  worker restart when their lease expires. The required Supabase migration
+  includes an atomic `FOR UPDATE SKIP LOCKED` claim function.

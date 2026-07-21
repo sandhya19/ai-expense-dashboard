@@ -1,6 +1,8 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { mockDashboardData } from "@/lib/mock-data";
+import { demoDashboardData } from "@/lib/demo-data";
+import { demoReceipts } from "@/lib/demo-data";
 import { buildSpendingDna, buildSpendingStory } from "@/lib/spending-intelligence";
 import type { DashboardData, Receipt, SpendingDnaProfile } from "@/lib/types";
 
@@ -19,12 +21,19 @@ async function getReceipts(): Promise<Receipt[]> {
   return (data ?? []) as Receipt[];
 }
 
-export async function getSpendingDnaProfile(): Promise<SpendingDnaProfile> {
-  const receipts = await getReceipts();
+export async function getSpendingDnaProfile(demoMode = false): Promise<SpendingDnaProfile> {
+  const receipts = demoMode
+    ? demoReceipts.map((receipt) => ({
+      id: receipt.id, merchant: receipt.merchant, receipt_date: receipt.receipt_date,
+      category: receipt.category, total: Number(receipt.total), confidence: receipt.confidence,
+      status: receipt.status, is_business: receipt.is_business, created_at: receipt.created_at,
+    }))
+    : await getReceipts();
   return { receipts, dna: buildSpendingDna(receipts) };
 }
 
-export async function getDashboardData(): Promise<DashboardData> {
+export async function getDashboardData(demoMode = false): Promise<DashboardData> {
+  if (demoMode) return demoDashboardData;
   if (!configured) return mockDashboardData;
   const receipts = await getReceipts();
   const now = new Date();

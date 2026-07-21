@@ -38,6 +38,7 @@ type ReceiptDetailPageProps = {
     reprocessed?: string;
     itemsSaved?: string;
     error?: string;
+    demo?: string;
   }>;
 };
 
@@ -68,7 +69,8 @@ export default async function ReceiptDetailPage({
   searchParams,
 }: ReceiptDetailPageProps) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
-  const receipt = await getReceiptDetail(id);
+  const isDemoMode = query.demo === "1";
+  const receipt = await getReceiptDetail(id, isDemoMode);
 
   if (!receipt) {
     notFound();
@@ -101,7 +103,7 @@ export default async function ReceiptDetailPage({
             asChild
             className="-ml-3 mb-2"
           >
-            <Link href="/documents">
+            <Link href={isDemoMode ? "/documents?demo=1" : "/documents"}>
               <ArrowLeft className="size-4" />
               Documents
             </Link>
@@ -134,6 +136,12 @@ export default async function ReceiptDetailPage({
         <p className="flex items-center gap-2 rounded-md bg-emerald-500/10 p-3 text-sm text-emerald-700 dark:text-emerald-400">
           <CheckCircle2 className="size-4" />
           Receipt review saved.
+        </p>
+      )}
+
+      {isDemoMode && (
+        <p className="rounded-md bg-primary/10 p-3 text-sm text-primary">
+          Demo Mode uses fictional read-only receipt data. Review the evidence without changing any account data.
         </p>
       )}
 
